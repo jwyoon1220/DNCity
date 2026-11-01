@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:white_wool"
+    },
+    {
+      "item": "firstaid:bandage"
+    },
+    {
+      "item": "firstaid:bandage"
+    },
+    {
+      "item": "firstaid:plaster"
+    },
+    {
+      "item": "minecraft:iron_ingot"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "firstaid:car_first_aid_kit"
+  }
+}

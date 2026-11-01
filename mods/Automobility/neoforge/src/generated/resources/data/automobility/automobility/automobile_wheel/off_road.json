@@ -1,0 +1,10 @@
+{
+  "display": {
+    "model": "automobility:wheel/off_road",
+    "radius": 8.4,
+    "texture": "automobility:textures/entity/automobile/wheel/off_road.png",
+    "width": 5.0
+  },
+  "grip": 0.8,
+  "size": 1.1
+}

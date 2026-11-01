@@ -1,0 +1,55 @@
+{
+  "_empty": true,
+  "display": {
+    "driver_seat": [
+      0.0,
+      8.0,
+      0.0
+    ],
+    "engine_position": [
+      0.0,
+      4.0,
+      -8.0
+    ],
+    "front_attachment_offset": 8.0,
+    "length_pixels": 16.0,
+    "model": "automobility:empty",
+    "rear_attachment_offset": 8.0,
+    "texture": "minecraft:empty",
+    "wheels": [
+      {
+        "end": "front",
+        "forward": 8.0,
+        "right": -8.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "back",
+        "forward": -8.0,
+        "right": -8.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "front",
+        "forward": 8.0,
+        "right": 8.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      },
+      {
+        "end": "back",
+        "forward": -8.0,
+        "right": 8.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      }
+    ]
+  },
+  "weight": 0.25
+}

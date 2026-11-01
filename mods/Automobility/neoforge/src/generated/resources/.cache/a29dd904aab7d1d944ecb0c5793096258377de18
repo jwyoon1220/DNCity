@@ -1,0 +1,10 @@
+// 1.21.1	2025-02-28T14:19:55.0495891	Block Models: automobility
+c6933373100d77accb92c32fcc39a40409152aa9 assets/automobility/models/block/slope_bottom.json
+5424971fac83ee1879d745dace5af27cd0a23889 assets/automobility/models/block/slope_bottom_dash_panel.json
+0430505850bc66600562b5762aa5375776fd5380 assets/automobility/models/block/slope_bottom_dash_panel_off.json
+031558226910babd31792b47a65c989aaec5ac1f assets/automobility/models/block/slope_top.json
+6d0056d087663fd61c0d4c021c6747734b7fee12 assets/automobility/models/block/slope_top_dash_panel.json
+0308916465c664af20037087fb703e0c2663353f assets/automobility/models/block/slope_top_dash_panel_off.json
+24bc9766920b03925d7e7d3715c761fadf2ca309 assets/automobility/models/block/steep_slope.json
+750f44a4de40523c88a30283059ab88909fc8efb assets/automobility/models/block/steep_slope_dash_panel.json
+5eb6ba1d3c2882fbf1334f91afe414f05c46c4ec assets/automobility/models/block/steep_slope_dash_panel_off.json

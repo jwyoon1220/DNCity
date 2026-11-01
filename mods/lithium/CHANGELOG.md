@@ -1,0 +1,15 @@
+_ReleaseTag_ is automatically replaced with the release tag, e.g. mc1.21.4-0.14.5
+_MCVersion_ is automatically replaced with the minecraft version, e.g. 1.21.4
+_LithiumVersion_ is automatically replaced with the lithium version, e.g. 0.14.5
+Everything above the line is ignored and not included in the changelog. Everything below will be in the
+changelog on GitHub, Modrinth and CurseForge.
+----------
+Lithium _LithiumVersion_ for Minecraft 1.21 and 1.21.1 backports a few bug fixes.
+
+Make sure to take a backup of your world before using the mod and please report any bugs and mod compatibility issues at the [issue tracker](https://github.com/CaffeineMC/lithium-fabric/issues). You can check the [description of each optimization](https://github.com/CaffeineMC/lithium/blob/_ReleaseTag_/lithium-mixin-config.md) and how to disable it when encountering a problem.
+
+## Fixes
+- Fix supporting block movement shortcut not offsetting VoxelShape 
+- Fix double inventory related inventory invalidation issues
+- Avoid crashing when modded levels with broken registries are created
+- Fix comparator updates missing for furnaces and brewing stands

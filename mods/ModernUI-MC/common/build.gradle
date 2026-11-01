@@ -1,0 +1,27 @@
+plugins {
+    id 'agency.highlysuspect.minivan' version '0.5'
+}
+
+repositories {
+    maven {
+        url 'https://repo.spongepowered.org/repository/maven-public/'
+    }
+    maven {
+        url 'https://maven.izzel.io/releases/'
+    }
+    mavenLocal()
+}
+
+minivan {
+    version(minecraft_version)
+}
+
+dependencies {
+    compileOnly 'org.spongepowered:mixin:0.8.5'
+    compileOnly 'org.ow2.asm:asm-tree:9.5'
+
+    implementation("dev.icyllis:modernui-core:${core_version}")
+    implementation("icyllis.modernui:ModernUI-Markflow:3.12.0") {
+        transitive = false
+    }
+}

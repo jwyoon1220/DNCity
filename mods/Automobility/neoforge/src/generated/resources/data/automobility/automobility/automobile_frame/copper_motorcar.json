@@ -1,0 +1,93 @@
+{
+  "display": {
+    "driver_seat": [
+      0.0,
+      3.0,
+      0.0
+    ],
+    "engine_position": [
+      0.0,
+      2.0,
+      -18.0
+    ],
+    "front_attachment_offset": 22.0,
+    "length_pixels": 28.0,
+    "model": "automobility:frame/motorcar",
+    "rear_attachment_offset": 23.0,
+    "texture": "automobility:textures/entity/automobile/frame/copper_motorcar.png",
+    "wheels": [
+      {
+        "end": "front",
+        "forward": 16.0,
+        "right": -6.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "back",
+        "forward": -16.0,
+        "right": -6.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "front",
+        "forward": 16.0,
+        "right": 6.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      },
+      {
+        "end": "back",
+        "forward": -16.0,
+        "right": 6.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      }
+    ]
+  },
+  "hitboxes": [
+    {
+      "height": 0.8,
+      "origin": [
+        0.0,
+        0.4,
+        0.0
+      ],
+      "width": 1.2
+    },
+    {
+      "height": 0.9,
+      "origin": [
+        0.0,
+        0.45,
+        1.0
+      ],
+      "width": 0.9
+    },
+    {
+      "height": 1.0,
+      "origin": [
+        0.0,
+        0.45,
+        -1.0
+      ],
+      "width": 0.9
+    }
+  ],
+  "horn": {
+    "loop_end": 0.9405,
+    "loop_start": 0.1916,
+    "pitches": [
+      1.2599211
+    ],
+    "sound": {
+      "sound_id": "automobility:entity.automobile.klaxon_horn"
+    }
+  },
+  "weight": 0.4
+}

@@ -1,0 +1,94 @@
+{
+  "display": {
+    "driver_seat": [
+      0.0,
+      2.5,
+      0.0
+    ],
+    "engine_position": [
+      0.0,
+      3.0,
+      -13.0
+    ],
+    "front_attachment_offset": 14.5,
+    "length_pixels": 26.0,
+    "model": "automobility:frame/rickshaw",
+    "rear_attachment_offset": 17.5,
+    "texture": "automobility:textures/entity/automobile/frame/prismarine_rickshaw.png",
+    "wheels": [
+      {
+        "end": "back",
+        "forward": -11.0,
+        "right": -7.5,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "back",
+        "forward": -11.0,
+        "right": 7.5,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      },
+      {
+        "end": "front",
+        "forward": 11.0,
+        "right": -0.1,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "front",
+        "forward": 11.0,
+        "right": 0.1,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      }
+    ]
+  },
+  "hitboxes": [
+    {
+      "height": 0.3,
+      "origin": [
+        0.0,
+        0.4,
+        -0.2
+      ],
+      "width": 0.6
+    },
+    {
+      "height": 0.8,
+      "origin": [
+        0.0,
+        0.4,
+        0.6
+      ],
+      "width": 0.7
+    },
+    {
+      "height": 1.6,
+      "origin": [
+        0.0,
+        0.8,
+        -0.8
+      ],
+      "width": 0.9
+    }
+  ],
+  "horn": {
+    "loop_end": 0.95,
+    "loop_start": 0.151,
+    "pitches": [
+      1.4142135,
+      1.6817929
+    ],
+    "sound": {
+      "sound_id": "automobility:entity.automobile.trumpet_horn"
+    }
+  },
+  "weight": 0.14
+}

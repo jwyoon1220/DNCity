@@ -1,0 +1,31 @@
+{
+  "display": {
+    "exhausts": [
+      {
+        "pitch": 26.0,
+        "position": [
+          -3.5,
+          5.4,
+          -8.0
+        ],
+        "yaw": 0.0
+      },
+      {
+        "pitch": 26.0,
+        "position": [
+          3.5,
+          5.4,
+          -8.0
+        ],
+        "yaw": 0.0
+      }
+    ],
+    "model": "automobility:engine/iron",
+    "texture": "automobility:textures/entity/automobile/engine/iron.png"
+  },
+  "sound": {
+    "sound_id": "automobility:entity.automobile.iron_engine"
+  },
+  "speed": 0.75,
+  "torque": 0.5
+}

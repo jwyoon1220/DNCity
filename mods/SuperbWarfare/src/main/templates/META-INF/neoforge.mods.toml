@@ -1,0 +1,75 @@
+modLoader = "kotlinforforge"
+loaderVersion = "${loader_version_range}"
+license = "${mod_license}"
+
+[[mods]]
+modId = "superbwarfare"
+version = "${mod_version}"
+displayName = "Superb Warfare"
+authors = "${mod_authors}"
+logoFile = "../../resources/logo.png"
+description = "${mod_description}"
+enumExtensions = "META-INF/enumextensions.json"
+
+[[mixins]]
+config = "mixins.superbwarfare.json"
+
+[[dependencies.superbwarfare]]
+modId = "neoforge" #mandatory
+mandatory = true #mandatory
+versionRange = "${neo_version_range}" #mandatory
+ordering = "NONE"
+side = "BOTH"# Here's another dependency
+
+[[dependencies.superbwarfare]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.superbwarfare]]
+modId = "simplebedrockmodel"
+type = "required"
+versionRange = "[2.5.1.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.superbwarfare]]
+modId = "geckolib"
+type = "optional"
+versionRange = "[4.7.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.superbwarfare]]
+modId = "curios"
+type = "optional"
+versionRange = "[9.0.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.superbwarfare]]
+modId = "cloth_config"
+type = "optional"
+versionRange = "[15.0.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.superbwarfare]]
+modId = "optifine"
+type = "discouraged"
+
+[[dependencies.superbwarfare]]
+modId = "geckoanimfix"
+type = "incompatible"
+
+[[dependencies.superbwarfare]]
+modId = "realcamera"
+type = "optional"
+versionRange = "[0.7.0-beta,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[features.superbwarfare]
+openGLVersion = "[3.2,)"

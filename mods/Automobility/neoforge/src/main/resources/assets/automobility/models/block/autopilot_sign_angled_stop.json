@@ -1,0 +1,6 @@
+{
+  "parent": "automobility:block/template_autopilot_sign_angled_right",
+  "textures": {
+    "sign": "automobility:block/autopilot_sign_stop"
+  }
+}

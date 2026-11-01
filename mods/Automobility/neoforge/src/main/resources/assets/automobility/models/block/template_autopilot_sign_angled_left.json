@@ -1,0 +1,34 @@
+{
+	"texture_size": [16, 32],
+	"textures": {
+		"particle": "#sign"
+	},
+	"elements": [
+		{
+			"from": [7, 0, 7],
+			"to": [9, 4, 9],
+			"rotation": {"angle": 45, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [12, 6, 14, 8], "texture": "#sign"},
+				"east": {"uv": [14, 6, 12, 8], "texture": "#sign"},
+				"south": {"uv": [14, 6, 12, 8], "texture": "#sign"},
+				"west": {"uv": [14, 6, 12, 8], "texture": "#sign"},
+				"up": {"uv": [14, 9, 12, 8], "texture": "#sign"},
+				"down": {"uv": [14, 8, 12, 9], "texture": "#sign"}
+			}
+		},
+		{
+			"from": [2, 4, 6.5],
+			"to": [14, 16, 9.5],
+			"rotation": {"angle": 45, "axis": "y", "origin": [8, 4, 8]},
+			"faces": {
+				"north": {"uv": [12, 0, 0, 6], "texture": "#sign"},
+				"east": {"uv": [12, 0, 15, 6], "texture": "#sign"},
+				"south": {"uv": [0, 6, 12, 12], "texture": "#sign"},
+				"west": {"uv": [12, 0, 15, 6], "rotation": 180, "texture": "#sign"},
+				"up": {"uv": [15, 6, 12, 0], "rotation": 90, "texture": "#sign"},
+				"down": {"uv": [15, 0, 12, 6], "rotation": 270, "texture": "#sign"}
+			}
+		}
+	]
+}

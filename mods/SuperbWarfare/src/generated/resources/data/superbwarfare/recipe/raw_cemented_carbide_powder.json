@@ -1,0 +1,77 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    [
+      {
+        "tag": "c:dusts/tungsten"
+      },
+      {
+        "tag": "c:dusts/scheelite"
+      }
+    ],
+    [
+      {
+        "tag": "c:dusts/tungsten"
+      },
+      {
+        "tag": "c:dusts/scheelite"
+      }
+    ],
+    [
+      {
+        "tag": "c:dusts/tungsten"
+      },
+      {
+        "tag": "c:dusts/scheelite"
+      }
+    ],
+    [
+      {
+        "tag": "c:dusts/tungsten"
+      },
+      {
+        "tag": "c:dusts/scheelite"
+      }
+    ],
+    [
+      {
+        "tag": "c:dusts/tungsten"
+      },
+      {
+        "tag": "c:dusts/scheelite"
+      }
+    ],
+    [
+      {
+        "tag": "c:dusts/tungsten"
+      },
+      {
+        "tag": "c:dusts/scheelite"
+      }
+    ],
+    [
+      {
+        "tag": "c:dusts/tungsten"
+      },
+      {
+        "tag": "c:dusts/scheelite"
+      }
+    ],
+    {
+      "tag": "c:dusts/iron"
+    },
+    [
+      {
+        "tag": "c:dusts/coal_coke"
+      },
+      {
+        "tag": "c:dusts/coal"
+      }
+    ]
+  ],
+  "result": {
+    "count": 8,
+    "id": "superbwarfare:raw_cemented_carbide_powder"
+  }
+}

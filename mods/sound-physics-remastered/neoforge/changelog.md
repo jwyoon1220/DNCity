@@ -1,0 +1,1 @@
+- Fixed direction evaluation being inaccurate at long distances

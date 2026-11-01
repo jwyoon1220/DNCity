@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:leather"
+    },
+    {
+      "item": "minecraft:green_dye"
+    },
+    {
+      "item": "firstaid:bandage"
+    },
+    {
+      "item": "firstaid:bandage"
+    },
+    {
+      "item": "firstaid:plaster"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "firstaid:ifak"
+  }
+}

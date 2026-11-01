@@ -1,0 +1,26 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "ACA",
+        "ABA",
+        " D "
+    ],
+    "key": {
+        "A": {
+            "item": "minecraft:iron_ingot"
+        },
+        "B": {
+            "item": "minecraft:redstone"
+        },
+        "C": {
+            "item": "minecraft:emerald"
+        },
+        "D": {
+            "item": "minecraft:iron_bars"
+        }
+    },
+    "result": {
+        "id": "automobility:autopilot_sign",
+        "count": 6
+    }
+}

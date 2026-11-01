@@ -1,0 +1,22 @@
+{
+  "display": {
+    "exhausts": [
+      {
+        "pitch": 26.0,
+        "position": [
+          2.0,
+          1.625,
+          -8.95
+        ],
+        "yaw": 0.0
+      }
+    ],
+    "model": "automobility:engine/copper",
+    "texture": "automobility:textures/entity/automobile/engine/copper.png"
+  },
+  "sound": {
+    "sound_id": "automobility:entity.automobile.copper_engine"
+  },
+  "speed": 0.68,
+  "torque": 0.375
+}

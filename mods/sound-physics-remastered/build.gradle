@@ -1,0 +1,10 @@
+plugins {
+    id 'com.gradleup.shadow' version "${shadow_version}" apply false
+    id 'de.maxhenkel.cursegradle' version "${cursegradle_version}" apply false
+    id 'com.modrinth.minotaur' version "${minotaur_version}" apply false
+    id 'mod-update' version "${mod_update_version}" apply false
+    // 'fabric-loom' dropped: it needs a newer Gradle (plugin api-version 9.2.0) than this repo
+    // runs (8.11) and would fail to even RESOLVE at configuration time (regardless of "apply
+    // false") now that settings.gradle no longer includes the "fabric" subproject that used it --
+    // see settings.gradle's comment.
+}

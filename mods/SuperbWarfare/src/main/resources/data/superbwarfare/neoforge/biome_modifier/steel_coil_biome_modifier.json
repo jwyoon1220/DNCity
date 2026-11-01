@@ -1,0 +1,10 @@
+{
+  "type": "neoforge:add_spawns",
+  "biomes": "#c:is_overworld",
+  "spawners": {
+    "type": "superbwarfare:steel_coil",
+    "weight": 5,
+    "minCount": 1,
+    "maxCount": 3
+  }
+}

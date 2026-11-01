@@ -1,0 +1,21 @@
+{
+	"texture_size": [16, 32],
+	"textures": {
+		"particle": "#sign"
+	},
+	"elements": [
+		{
+			"from": [2, 0, 2],
+			"to": [14, 1, 14],
+			"rotation": {"angle": -45, "axis": "y", "origin": [8, 0, 8]},
+			"faces": {
+				"north": {"uv": [14, 0, 15, 6], "rotation": 270, "texture": "#sign"},
+				"east": {"uv": [14, 0, 15, 6], "rotation": 270, "texture": "#sign"},
+				"south": {"uv": [14, 0, 15, 6], "rotation": 270, "texture": "#sign"},
+				"west": {"uv": [14, 0, 15, 6], "rotation": 270, "texture": "#sign"},
+				"up": {"uv": [0, 0, 12, 6], "rotation": 270, "texture": "#sign"},
+				"down": {"uv": [0, 6, 12, 12], "rotation": 270, "texture": "#sign"}
+			}
+		}
+	]
+}

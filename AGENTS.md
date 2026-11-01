@@ -27,13 +27,13 @@ current feature under active development is voice chat (item, tuning UI, network
 domain model for modes/bands/frequencies), replacing a previously-removed Simple Voice Chat
 integration with two tiers: close-range (Opus, full-duplex, no PTT) and radio (codec2, PTT,
 half-duplex, frequency/range-gated — see "Architecture: the radio system"). Two other mods
-(TACZ, First Aid) are vendored as composite-build submodules the project depends on; TACZ (a gun
+(TACZ, First Aid) are vendored as plain source folders (composite builds) the project depends on; TACZ (a gun
 mod) plays its weapon sounds through DNCity's own bundled FMOD Studio banks
 (`src/main/resources/fmod/*.bank`) rather than TACZ's normal vanilla-sound-engine OGG files — see
-"Composite builds / submodules" below. Beyond TACZ/First Aid, a growing pile of other mods
+"Composite builds / vendored mods" below. Beyond TACZ/First Aid, a growing pile of other mods
 (Automobility, SuperbWarfare, ModernUI-MC, Sodium, Iris, VoxelMap, Sound Physics Remastered,
 Distant Horizons) are vendored the same way, mostly as gameplay/rendering content rather than
-things DNCity's own code calls into — see "Composite builds / submodules" below. Native modules
+things DNCity's own code calls into — see "Composite builds / vendored mods" below. Native modules
 exist under `engine/`: `engine/audio` (miniaudio capture/playback + the codec2 JNI bridge),
 `engine/fmod` (hand-written JNI FMOD Studio bindings), `engine/window` (Win32 child-window/JCEF
 overlay bridge), and `engine/browserhost` (a standalone JCEF host process, not JNI) are all wired
@@ -64,7 +64,7 @@ most verification is done by running a dev client.
 
 ## Toolchain
 
-The whole repo (root project, TACZ submodule, First Aid submodule, `engine/audio`,
+The whole repo (root project, TACZ, First Aid, `engine/audio`,
 `engine/fmod`) is pinned to **Java 21** — what Mojang ships to end users for Minecraft 1.21.1,
 so it's what players actually have. Don't lower `sourceCompatibility`/`targetCompatibility` in
 any of these modules independently; keep them unified.
@@ -79,9 +79,14 @@ JNI instead (see its own entry below), which has no such floor — don't reintro
 jextract/FFM-based binding without solving that the same way, or this section (and the Java 21
 pin across every module) needs revisiting.
 
-## Composite builds / submodules
+## Composite builds / vendored mods
 
-`mods/TACZ-1.21.1` and `mods/First-Aid-New` are git submodules included via
+All of `mods/*` and `engine/audio/vendor/codec2` are **plain files in this repo** (since 2026-11-01 there are no git
+submodules and no `.gitmodules`; the old forks' history only survives in a local `.git/modules/` if still present).
+Edit them in place and commit them like any other source; there is no `git submodule update` step and no upstream
+link to push to.
+
+`mods/TACZ-1.21.1` and `mods/First-Aid-New` are vendored folders included via
 `includeBuild(...)` + `dependencySubstitution` in `settings.gradle.kts`, so their own project
 graph resolves using *this* project's repositories (see the `flatDir`/jitpack/maven blocks in
 `build.gradle.kts` that exist specifically to satisfy TACZ's dependencies). Their versions in
@@ -146,7 +151,7 @@ reuse the root project's Gradle wrapper distribution; neither has its own `gradl
     noise gate/VAD runs on captured samples before they hit the ring buffer (attack/release
     envelope follower with hysteresis) — see `NativeAudio.java`'s
     `setNoiseGateThresholdDb`/`isVoiceActive`/`getInputLevelDb`.
-  - [codec2](https://github.com/drowe67/codec2) (vendored as a git submodule at
+  - [codec2](https://github.com/drowe67/codec2) (vendored as plain files at
     `engine/audio/vendor/codec2`, LGPL-2.1) for the radio-voice tier's actual codec (MODE_2400/
     MODE_1200 — see `Codec2.java` and the mod's `voice/Codec2Codec.kt`). Handle-based JNI
     (`jni_codec2.cpp`): one `create`/`destroy` pair per stream, `encode`/`decode` per frame.
@@ -195,8 +200,8 @@ of these; only the load-bearing gotchas are repeated here:
   TACZ/SuperbWarfare's own compat mixins target that exact Sodium API generation and the branch
   tips moved to an incompatible Sodium 0.8 rewrite — see `settings.gradle.kts`'s long comment
   above these two `includeBuild` calls before ever bumping either one.
-- **Distant Horizons** (`mods/distant-horizons`, far-terrain LOD rendering) — unlike every other
-  submodule above, this is a straight mirror of upstream (`SunsetDN/distant-horizons`, itself just
+- **Distant Horizons** (`mods/distant-horizons`, far-terrain LOD rendering) — unlike the other
+  vendored mods above, this started as a straight mirror of upstream (`SunsetDN/distant-horizons`, itself just
   a fork of `jeseibel/distant-horizons`), tracking the actively-maintained `main` branch rather
   than a pre-flattened single-version branch, because no such branch exists here. Upstream is one
   multiversion Gradle project selected at configure time by the `mcVer` project property (see
@@ -207,15 +212,13 @@ of these; only the load-bearing gotchas are repeated here:
   defaults to `fabric,neoforge`; the fabric loader there needs fabric-loom 1.10, which requires
   Gradle 8.12+, one minor version ahead of this repo's Gradle 8.11 — dropping it avoids bumping
   the whole repo's Gradle version for a loader DNCity never uses). DH's own core logic lives in a
-  **second submodule** nested inside it (`mods/distant-horizons/coreSubProjects`, LGPL). Upstream
+  **second vendored project** nested inside it (`mods/distant-horizons/coreSubProjects`, LGPL). Upstream
   hosts it on GitLab (`gitlab.com/jeseibel/distant-horizons-core`), but the patched copy DNCity
-  pins lives in the same GitHub fork, on branch `codex/dncity-core-1.21.1`
-  (`mods/distant-horizons/.gitmodules` → `github.com/SunsetDN/distant-horizons.git`) —
-  `git submodule update --init --recursive` is required, same as this repo's own top-level
-  submodules. The vendored commit is pinned to a specific SHA from *before* upstream's own
+  pins was taken from the same GitHub fork, branch `codex/dncity-core-1.21.1`, and is now
+  plain files under `mods/distant-horizons/coreSubProjects`. The vendored commit is pinned to a specific SHA from *before* upstream's own
   Gradle-9 migration (composite builds run every included build under the root's Gradle version,
-  8.11 here, and a newer DH commit's `buildSrc` calls a Gradle-9-only API) — don't blindly update
-  this submodule to a newer commit without re-verifying the whole repo still builds under Gradle
+  8.11 here, and a newer DH commit's `buildSrc` calls a Gradle-9-only API) — don't blindly replace
+  these files with a newer upstream commit without re-verifying the whole repo still builds under Gradle
   8.11. A few local patches on top of that pinned commit (in both `mods/distant-horizons` and its
   nested `coreSubProjects`) fix build breakage that's otherwise unrelated to DNCity specifically:
   a dead `maven.vram.io` repo (swapped for the real `maven.su5ed.dev`, needed to resolve
@@ -245,6 +248,12 @@ of these; only the load-bearing gotchas are repeated here:
   and `lodChunkRenderDistanceRadius` 256→128 chunks — because Sodium/Iris/Flywheel/Veil are
   already competing for the same GPU/CPU budget DH's LOD terrain adds on top of. All three remain
   adjustable per-player in DH's own GUI/config file; only the shipped defaults changed.
+  CPU (JFR profile 2026-10-28: DH was ~75% of all Java CPU samples, mostly distant world generation): `ChunkWrapper`
+  builds its DH heightmaps on first use instead of in the constructor (wrappers are made on the server thread for every
+  chunk load, 8 neighbours each, and most never read a heightmap; this was ~20% of the integrated server thread), and
+  `threadPriority` defaults to 3 instead of 5 so DH's pools yield to the render/server threads. An existing
+  `DistantHorizons.toml` keeps its old `threadPriority = 5`. Profile a dev client unattended with
+  `./gradlew runClient -Pdncity.quickPlay="<world>" -Pdncity.jfr=<file.jfr>` (see `build.gradle.kts`).
 
 ## Architecture: the radio system
 
@@ -637,7 +646,7 @@ The player's real health is the per-limb hit points of First Aid's `PlayerDamage
   otherwise the bullet position. TACZ damage values are vanilla-scaled and go through `HealthUnits` (AUTO); add
   `#tacz:bullets` to the `firstaid:raw_damage` tag to make a gun's damage value mean limb hit points instead
   (a damage of 50 removes 50 hp from the limb hit). Not compiled in this environment (DNCity's root build needs the
-  other submodules); the First Aid side is covered by a game test.
+  other vendored mods); the First Aid side is covered by a game test.
 
 - **Shells (every projectile is one Shell)** — `ballistics/` in DNCity (not First Aid). `ShellRegistry.of(entity)` is
   the single place where a projectile of any mod (TACZ bullet, SuperbWarfare cannon shell/rocket/missile/bomb) turns
@@ -660,7 +669,7 @@ The player's real health is the per-limb hit points of First Aid's `PlayerDamage
   PLZ-05/FH-77BW 155, ...) are assumptions: SuperbWarfare's data has none. Small autocannon AP/HE variants cannot be told
   apart (same entity, same vehicle) and share one shell. SuperbWarfare explosion damage types use the equal distribution
   and its `*_headshot` types force the head via `data/dncity/firstaid/damage_distributions/`. The Kotlin side is not
-  compiled in this environment (the root build needs the other submodules); the First Aid hook has game tests.
+  compiled in this environment (the root build needs the other vendored mods); the First Aid hook has game tests.
 
 - **Terminal ballistics (War Thunder-style hits, in progress)** — `ballistics/terminal/`. Target design: every projectile (rifle
   round to tank shell) runs the *same pipeline* with a *different penetrator model*: `ProjectileDefinition -> ProjectileState ->
@@ -1074,19 +1083,22 @@ drawn as far as the terrain under them).
   framebuffer and copies only colour into Minecraft's (`coreSubProjects/.../shaders/apply.frag`), so the depth buffer cannot hide
   a proxy behind a far hill. A background thread marches eye -> head/chest/feet through DH's column data
   (`IDhApiTerrainDataRepo.getColumnDataAtBlockPos`, which blocks, hence the thread) from the vanilla radius to 1.5 blocks short of
-  the target, 4 times a second; hidden only if all three lines hit solid LOD (air/liquid ignored; a column without data never
-  occludes). New proxies start hidden until their first answer. That test is for drawing only; what reaches the client is
+  the target, 4 times a second; hidden only if all three lines hit solid LOD (a column without data never occludes). New
+  proxies are drawn until an answer says otherwise. That test is for drawing only; what reaches the client is
   decided by the server (next point).
 - **Anti-wallhack** (`farentity/FarEntityVisibility`, user 2026-10-27, long range only): the server sends a far player only
   while a line from the viewer's eye -- or a step to either side across the line of sight, or a jump up
   (`FarEntityMath.peekEyes`, 1 block each, DESIGN) -- to the target's head, chest or feet is clear through the *server's* DH
   terrain (`farentity/DhTerrainColumns` on `SERVER_LEVEL`, built from real chunks; DH's lookup only reads its database, it never
   queues generation), re-checked every 200 ms (500 ms beyond 1024 blocks) on a background thread, sent for 1.5 s after the
-  last clear line; hidden again -> the viewer gets a removal. Fails closed: nothing is sent before the first "visible", or
-  for a dimension DH has no world for, or at all without DH on the server (logged once);
+  last clear line; hidden again -> the viewer gets a removal. **Fails open** (user 2026-10-28, far players were not showing
+  up at all): sent before the first answer, for a dimension DH has no world for, when a lookup throws, and always without
+  DH on the server (logged once); only a check that found every line blocked hides a player.
   `-Ddncity.farEntities.serverOcclusion=false` turns the check off. Vanilla tracking range (near players) is not filtered.
-- **Not covered / known limits**: both sight tests only tell air and liquid from solid (`IDhApiBlockStateWrapper`), so glass
-  and leaves block them: a far player seen only through a window or foliage is not sent. A freshly built wall counts once DH
+- **What blocks sight** (`DhTerrainColumns.blocksSight`, both tests): only blocks with a collision shape (DH's `isSolid`),
+  minus leaves (DH material LEAVES) and glass/fences/bars/chains/scaffolding/trapdoors (block id). Grass, flowers and other
+  plants used to count as full blocks, so a line skimming any meadow was blocked and almost nobody was sent.
+- **Not covered / known limits**: DH stores whole blocks, so slabs/snow layers count as full height. A freshly built wall counts once DH
   has re-read the chunk. Near players inside vanilla tracking range are still sent whatever is between. No shadows in Iris's shadow pass for proxies, no swim/elytra
   animation, vehicles keep their default turret/rotor state (only position, yaw, pitch are sent), name tags stay at vanilla's
   64 blocks. Compiled against the real 1.21.1/NeoForge 21.1.248 classes and DH's API; `FarEntityMathTest` (10) passes; the payload
@@ -1102,7 +1114,9 @@ held everything behind it. Three changes, plus one bug found on the way:
   `[conv LE][90][message]` (`RAW_DATAGRAM_CMD`; KCP segments carry 81/82 in that byte), never acked or resent; a message over
   1195 bytes falls back to KCP. The server takes a raw datagram only from an authenticated session's current address (and never a
   HELLO). `FreshnessGate` drops a frame that arrives behind a newer one of the same stream (type + speaker, compared on the
-  sender's own clock); the old 250 ms staleness check stays. Voice payload registrar is now `"2"` (a `"1"` peer would feed raw
+  sender's own clock); the old 250 ms staleness check stays. The client sends a `TYPE_KEEPALIVE` (9) over KCP every 5 s:
+  idle sessions carried no traffic, so a player quiet for 2 min lost the session to the server's idle timeout silently (no
+  radio/voice until relog; "radio sometimes does not work", 2026-10-28), and NAT mappings could lapse. Voice payload registrar is now `"2"` (a `"1"` peer would feed raw
   datagrams into KCP).
 - **Music files paced** (`music/MusicAssetSender`): `send` used to queue every 250 KB chunk of a file onto the player's Minecraft
   connection in one loop (soundfont on login, `/music play` for everyone), so game packets waited behind the whole file. Now:

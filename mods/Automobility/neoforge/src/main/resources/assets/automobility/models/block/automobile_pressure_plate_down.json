@@ -1,0 +1,7 @@
+{
+  "render_type": "cutout",
+  "parent": "minecraft:block/pressure_plate_down",
+  "textures": {
+    "texture": "automobility:block/automobile_pressure_plate"
+  }
+}

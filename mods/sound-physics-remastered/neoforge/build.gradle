@@ -1,0 +1,94 @@
+// Rewritten from upstream's `net.neoforged.gradle.userdev` + henkelmax/mod-gradle-scripts setup
+// to plain `net.neoforged.moddev`, matching every other single-loader NeoForge submodule in the
+// parent repo (Sodium/Iris/VoxelMap/Automobility/SuperbWarfare/First-Aid-New) -- see
+// settings.gradle's comment: the userdev toolchain's dependency graph needs a newer Gradle
+// (plugin api-version 8.14) than the parent repo runs (8.11) and fails to even resolve.
+// moddev auto-detects the mixin config declared in neoforge.mods.toml and the access
+// transformer at src/main/resources/META-INF/accesstransformer.cfg, so neither needs explicit
+// wiring here (same as the parent repo's other mixin-using submodules).
+plugins {
+    id 'net.neoforged.moddev' version '2.0.144'
+    id 'com.gradleup.shadow' version '9.2.2'
+}
+
+repositories {
+    // cloth-config-neoforge (optional integration, compileOnly below)
+    maven { url = 'https://maven.shedaniel.me/' }
+    // configbuilder + voicechat-api
+    maven { url = 'https://maven.maxhenkel.de/repository/public' }
+}
+
+base {
+    archivesName = mod_id
+}
+
+version = mod_version
+group = 'com.sonicether.soundphysics'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+neoForge {
+    version = neoforge_version
+
+    runs {
+        client {
+            client()
+        }
+    }
+
+    mods {
+        create(mod_id) {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+processResources {
+    var replaceProperties = [
+            mod_version        : mod_version,
+            neoforge_dependency: neoforge_dependency,
+            cloth_config_version: cloth_config_version,
+    ]
+    inputs.properties replaceProperties
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replaceProperties
+    }
+}
+
+// configbuilder (de.maxhenkel.configbuilder, used by SoundPhysicsConfig/SoundRateConfig/
+// BlockSoundConfigBase/ClothConfigIntegration -- see gradle.properties' `enable_configbuilder`,
+// upstream's shared mod.gradle script wired the equivalent of this before) is a small utility
+// library meant to be shaded + relocated into each consuming mod's own jar, not installed as a
+// separate mod -- hence the shadow/relocate below instead of a plain runtime dependency.
+def configbuilderVersion = '2.0.2'
+
+dependencies {
+    implementation "de.maxhenkel.configbuilder:configbuilder:${configbuilderVersion}"
+    shadow "de.maxhenkel.configbuilder:configbuilder:${configbuilderVersion}"
+
+    // Both are optional integrations (see neoforge.mods.toml's `type = "optional"` dependency
+    // entries and ClothConfigIntegration.java / the integration/voicechat package) -- compileOnly
+    // is enough to compile against their APIs without pulling either mod itself onto any
+    // runtime classpath. In particular this deliberately does NOT add Simple Voice Chat as a
+    // runtime dependency (unlike upstream's own neoforge/build.gradle): the parent repo replaced
+    // SVC with its own voice/radio system (see the parent AGENTS.md's "Architecture: the radio
+    // system"), and this submodule's own run configs are never used by the parent build anyway
+    // (only its shadowJar output is, as a plain file dependency -- see the parent
+    // build.gradle.kts's comment on this submodule).
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${voicechat_api_version}"
+    compileOnly "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+    archiveClassifier = ''
+    relocate 'de.maxhenkel.configbuilder', "de.maxhenkel.${mod_id}.configbuilder"
+}
+
+tasks.named('assemble') {
+    dependsOn(shadowJar)
+}

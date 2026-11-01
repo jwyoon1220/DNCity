@@ -1,0 +1,46 @@
+
+apply plugin: "java"
+apply plugin: "java-gradle-plugin"
+// DNCity: added so this plugin can be `publishToMavenLocal`'d once and then resolved by normal
+// Maven-coordinate plugin resolution (mavenLocal() is already in DNCity's root
+// pluginManagement.repositories) -- this plugin's own `includeBuild("components/mixin-config-plugin")`
+// composite-build-as-plugin mechanism (declared in ../settings.gradle.kts) doesn't resolve
+// correctly once that settings file is itself pulled in as a nested composite build inside
+// DNCity's own outer one, rather than being the top-level Gradle invocation (confirmed by hand:
+// "already on the classpath with an unknown version" / "plugin ... was not found" errors).
+apply plugin: "maven-publish"
+
+archivesBaseName = 'mixin-config-plugin'
+version = '1.0-SNAPSHOT'
+group = 'net.caffeinemc'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}
+
+gradlePlugin {
+    // Define the plugin
+    plugins {
+        compiler {
+            id = 'net.caffeinemc.mixin-config-plugin'
+            implementationClass = 'net.caffeinemc.gradle.GradleMixinConfigPlugin'
+        }
+    }
+}
+
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
+
+// ensure that the encoding is set to UTF-8, no matter what the system default is
+// this fixes some edge cases with special characters not displaying correctly
+// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+jar {
+    from "${rootProject.projectDir}/LICENSE.md"
+}

@@ -1,0 +1,26 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "ichttt.mods.firstaid.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "FoodDataMixin",
+    "LivingEntityHealthMixin",
+    "PoisonMobEffectMixin",
+    "LivingEntityDamageMixin",
+    "PlayerDimensionsMixin",
+    "ProjectileMixin"
+  ],
+  "client": [
+    "client.GameRendererMixin",
+    "client.GameRendererPostAccessor",
+    "client.PostChainAccessor",
+    "client.PostPassAccessor",
+    "client.LivingEntityRendererMixin",
+    "client.PlayerModelMixin",
+    "client.PlayerRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

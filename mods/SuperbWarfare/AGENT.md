@@ -1,0 +1,232 @@
+# SuperbWarfare 项目架构指南
+
+## 概览
+
+SuperbWarfare 是一个 Minecraft NeoForge 1.21.1 军事题材模组。Kotlin/Java 混合开发（Kotlin 为主），使用 GeckoLib 做动画（未来要删除）和
+Simple Bedrock Model 渲染，Curios 做饰品栏位，Cloth Config 做配置界面，Rhino 做 JS 脚本引擎。
+
+- **Mod ID**: `superbwarfare`
+- **包名**: `com.atsuishio.superbwarfare`
+- **构建**: NeoForge MDG 2.0.80 + Kotlin 2.1.20 + serialization 插件
+- **映射**: Parchment `2024.11.17` (for 1.21.1)
+- **Java 21**
+- **入口类**: `src/main/kotlin/.../Mod.kt` (line 44, `@Mod` 注解)
+
+## 核心概念
+
+### 属性修改链（PMC）
+
+这是整个武器系统的核心。`GunData.get(prop)` 计算最终属性值时，按以下顺序叠加修改：
+1. NBT 中 JSON 格式的属性覆写
+2. GunItem 级别的修改（`PropertyModifier`）
+3. 当前开火模式的修改
+4. AmmoConsumer 的修改
+5. 所有已装备 Perk 的修改
+6. 内置上下限（`GunProp.modifyProperty`）
+
+### NBT 持久化
+
+枪械运行时状态（弹药、Perk、配件、开火模式、热量、换弹状态等）全部存在 ItemStack NBT 中，通过类型化包装类（`IntValue`, `DoubleValue`, `BooleanValue`, `StringEnumValue`）读写。
+
+### 数据驱动设计
+
+枪械和载具的模板数据（`DefaultGunData`, `VehicleData`）从 JSON 文件加载，通过 (`sbw-data`) 提供的 `CustomData` 全局注册表访问。枪械定义靠数据而非硬编码。
+
+## 目录结构
+
+### `src/main/kotlin/.../` (Kotlin，主要代码)
+
+| 包              | 说明                                                                          |
+|----------------|-----------------------------------------------------------------------------|
+| `Mod.kt`       | 模组入口，注册 Registry、生命周期事件、tick 队列                                             |
+| `init/`        | 33 个注册/初始化文件（ModItems, ModBlocks, ModEntities, ModPerks, ModAttachments...） |
+| `data/`        | Kotlin 数据层（ContainerDataManager, WreckageLootData）                          |
+| `item/`        | Kotlin 物品类（弹药、护甲、容器、饰品、武器、弹射物、杂项）+ `item/gun/GunItem.kt`（枪械抽象基类）            |
+| `entity/`      | 实体系统（见下文实体层级）                                                               |
+| `event/`       | 11 个事件处理器（客户端的、枪械 tick、玩家事件、生物伤害、鼠标点击等）                                     |
+| `client/`      | 全部客户端代码（渲染、模型、GUI、粒子、overlay、shader）                                        |
+| `network/`     | 网络消息 + 注册（message/send/ 客户端→服务端，message/receive/ 服务端→客户端）                   |
+| `resource/`    | 资源加载（GunResource, VehicleResource）                                          |
+| `perk/`        | 枪械 Perk 系统（弹药 Perk、伤害 Perk、功能 Perk 三类）                                      |
+| `capability/`  | NeoForge Attachment 系统 + Capabilities API（PlayerVariable, 物品/实体能量存储）        |
+| `config/`      | 配置文件定义（ClientConfig, CommonConfig, ServerConfig）                            |
+| `compat/`      | 模组兼容层（JEI, Jade, KubeJS, Cloth Config, Cold Sweat 等）                        |
+| `api/event/`   | 自定义 NeoForge 事件（ShootEvent, PreKillEvent, ProjectileHitEvent 等）             |
+| `tools/`       | 工具类（HitboxHelper, MathTool, OBB, CustomExplosion, VectorTool 等）             |
+| `datagen/`     | 20 个数据生成器（物品模型、配方、战利品表、标签、进度）                                               |
+| `block/`       | 自定义方块及其方块实体                                                                 |
+| `command/`     | 服务端命令                                                                       |
+| `recipe/`      | 自定义配方类型                                                                     |
+| `procedures/`  | 纪念用彩蛋代码，无意义                                                                 |
+| `script/`      | Rhino JS 脚本引擎集成                                                             |
+| `../../run/world/`       | 世界数据（TDMSavedData, phys/ 射线追踪扩展）                                            |
+| `advancement/` | 自定义进度触发器                                                                    |
+
+### `src/main/java/.../` (Java + 部分 Kotlin 混放)
+
+| 包                                | 说明                                                                                           |
+|----------------------------------|----------------------------------------------------------------------------------------------|
+| `data/`                          | 数据基类（DataMap, IDBasedData, 序列化适配器）                                                           |
+| `data/gun/`                      | 枪械数据类型（GunData.kt 978行, DefaultGunData.kt, GunProp.kt, Ammo.java, ShootPos.kt, FireMode 等）   |
+| `data/vehicle/`                  | VehicleData, VehiclePropertyModifier                                                         |
+| `data/launchable/`               | ShootData, LaunchableEntityTool                                                              |
+| `data/mob_guns/`                 | 生物用枪数据                                                                                       |
+| `data/drone_attachment/`         | 无人机挂载数据                                                                                      |
+| `item/gun/`                      | 全部具体枪械物品类（约45把枪，按类型分目录）                                                                      |
+| `item/gun/vehicle/`              | VehicleGun.kt（载具武器的抽象基类）                                                                     |
+| `resource/gun/`                  | GunResource, DefaultGunResource, GunAnimation                                                |
+| `entity/vehicle/utils/` (kotlin) | VehicleMiscUtils, VehicleWeaponUtils, VehicleEngineUtils 等                                   |
+| `client/`                        | Java 客户端代码（GunRendererBuilder, PoseTool, 30+ 枪械 ItemRenderer, 50+ ItemModel, layer/vehicle/） |
+| `mixins/`                        | 34 个 Mixin（Player, Villager, Mob, KeyMapping, LightTexture 等）                                |
+| `compat/netmusic/`               | NetMusic 兼容内部持有类（未完成）                                                                        |
+
+## 实体层级
+
+```
+Entity (Minecraft)
+  ├─ VehicleEntity (base/VehicleEntity.kt:125) — 载具基类
+  │    ├─ GeoVehicleEntity (base/GeoVehicleEntity.kt) — GeckoLib 载具（未来要删除）
+  │    │    └─ Lav150Entity, Lav25Entity, M1A2Entity, T90aEntity 等
+  │    └─ AutoAimableEntity (base/AutoAimableEntity.kt:52) — 自动瞄准
+  │         └─ ArtilleryEntity (base/ArtilleryEntity.kt) — 火炮
+  │              └─ GeckoArtilleryEntity (base/GeckoArtilleryEntity.kt:11) — 临时桥接
+  ├─ Projectile (Minecraft)
+  │    └─ ProjectileEntity (projectile/ProjectileEntity.kt:77) — 弹射物基类
+  │         └─ CannonShellEntity, MissileProjectile, MortarShellEntity 等 30+ 种
+  └─ 生物 (entity/living/) — DPSGenerator, Senpai, Target
+```
+
+VehicleEntity 主要能力：能量系统、武器槽位、座位系统、库存、OBB 碰撞检测、残骸状态、引擎、容器。
+
+AutoAimableEntity 额外能力：主人 UUID、目标 UUID、激活状态、自动瞄准+射击解算、激光/射线武器、敌方/弹射物过滤。
+
+ProjectileEntity 特色：OBB 支持的自定义射线追踪、爆头/腿伤检测、穿甲机制、爆炸/火焰/击退、弹孔弹片、曳光 RGB。
+
+## 枪械系统
+
+### GunItem（枪械基类）
+
+`item/gun/GunItem.kt:73` — 抽象类，实现 `PropertyModifier<GunData, DefaultGunData>`
+
+- `reloadTimeBehaviors` / `boltTimeBehaviors` — 换弹/拉栓动画关键时刻回调
+- `modifyProperty()` — 子类覆写以添加额外属性加成
+- 能量 Capability 支持
+
+### GunGeoItem（GeckoLib 枪械，未来要删除）
+
+`item/gun/GunGeoItem.java:35` — 继承 GunItem + GeoItem（Java）
+- 提供动画控制器：idle, edit, bolt, reload, melee, fire, run/sprint
+- 依赖 GunResource 数据 + ClientEventHandler 状态驱动
+
+### VehicleGun（载具武器）
+
+`item/gun/vehicle/VehicleGun.kt:23` — 载具武器抽象基类
+
+### 弹药系统
+- `AmmoConsumer` — 定义弹药消耗方式（弹药类型/槽位/装填量）
+- `AmmoBoxItem` — 弹药盒（按弹药种类分类）
+- `CreativeAmmoBoxItem` — 创造模式弹药盒
+
+## 数据流转
+
+```
+JSON 数据文件 → CustomData.load() 加载
+  ├─ CustomData.GUN_DATA → DefaultGunData (模板)
+  ├─ CustomData.GUN_RESOURCE → DefaultGunResource (模型/动画)
+  └─ CustomData.VEHICLE_DATA → VehicleData (模板)
+
+ItemStack NBT ↔ GunData.from(stack) 获取运行时实例
+  ├─ get(prop) → 经 PMC 链计算最终值
+  └─ save() → 回写 NBT
+```
+
+## 网络通信
+
+在 `network/NetworkRegistry.kt` 注册（`RegisterPayloadHandlersEvent`）。
+
+- **客户端→服务端** (`message/send/`): FireKey, Reload, SwitchWeapon, Zoom, AdjustMortar, 蓝图研究等
+- **服务端→客户端** (`message/receive/`): Shoot 效果, 屏幕震动, 击杀指示器, 运动同步, 实体同步, TDM 同步等
+- **DataSlot** (`dataslot/`): 容器能量同步
+
+## 关键技术栈
+
+| 技术                               | 用途                           |
+|----------------------------------|------------------------------|
+| GeckoLib 4.7.5                   | 动画控制器 + Bedrock 模型渲染         |
+| Simple Bedrock Model 2.3.3       | Bedrock 模型加载器 (jar-in-jar)   |
+| Rhino 1.8.1-SNAPSHOT (ywzj fork) | JavaScript 脚本引擎 (jar-in-jar) |
+| Kotlin for Forge 5.10.0          | Kotlin 语言支持                  |
+| Curios 9.2.0+1.21.1              | 饰品栏位                         |
+| Cloth Config                     | 配置 GUI                       |
+| JEI + Jade + Patchouli           | 配方查看 / HUD / 指南书             |
+| KubeJS                           | JS 自定义内容                     |
+
+## 编码约定
+
+- 大部分业务逻辑用 Kotlin（~70%），少部分遗留 Java（~30%）仍在 `src/main/java`
+- 数据类在 `data/gun/` 混放 Kotlin/Java
+- 渲染基类用 Kotlin，每个具体枪/载具的 Renderer 和 Model 各一个文件
+- 使用 Kotlin `object` 做注册表持有者（如 `ModItems`, `ModEntities`）
+- NBT 属性通过 `IntValue/BooleanValue/DoubleValue/StringEnumValue` 包装
+- Perk 通过 `modifyProperty(PMC)` 修改属性
+- `@OnlyIn(Dist.CLIENT)` 用于客户端代码
+- 自定义事件存 `api/event/`，NeoForge 原生事件处理器存 `event/`
+
+## 常见任务指引
+
+- **添加新枪械**: 创建 JSON 数据文件 + 具体 GunItem 类（继承 GunGeoItem）+ ItemRenderer + ItemModel
+- **添加新载具**: 创建 VehicleResource JSON + VehicleEntity 子类 + Renderer + Model
+- **添加新弹药类型**: 创建 AmmoBoxItem + 添加 AmmoConsumer 配置
+- **添加新 Perk**: 继承 Perk 基类，注册到 ModPerks，实现 modifyProperty
+- **添加网络包**: 创建 Message 类 + 在 NetworkRegistry 注册
+- **配置项**: ClientConfig / CommonConfig / ServerConfig 中定义，Cloth Config 生成 GUI
+
+## 1.20同步相关事项
+
+该项目主开发分支为superbwarfare，使用Minecraft 1.20和Forge进行开发，1.21分支的同步方式为cherry
+pick再解决冲突。在解决冲突时，优先导入并使用MinecraftUtil.kt里定义的1.20兼容函数（若没有对应的可以主动创建），其余常见的兼容性修改见下
+
+- 将`net.minecraftforge`等forge相关的包更改为neoforge的，如将`net.minecraftforge.api.distmarker.Dist`和
+  `net.minecraftforge.api.distmarker.OnlyIn`改为`net.neoforged.api.distmarker.Dist`和
+  `net.neoforged.api.distmarker.OnlyIn`
+
+- `override fun initializeClient(consumer: Consumer<IClientItemExtensions>)`方法已被弃用，请在需要注册自定义renderer的类上面定义
+  `@EventBusSubscriber companion object`，并在里面声明
+  `@SubscribeEvent fun registerRender(event: RegisterClientExtensionsEvent)`方法进行注册，示例：
+
+```kotlin
+class SomeItem : Item {
+  @EventBusSubscriber
+  companion object {
+    @SubscribeEvent
+    fun registerRender(event: RegisterClientExtensionsEvent) {
+      event.registerItem(object : IClientItemExtensions {
+        // ... 
+      }, ModItems.SOME_ITEM)
+    }
+  }
+}
+```
+
+- Capability在neoforge被重写，不再返回Optional，而是返回Nullable的值，使用方法示例
+
+```kotlin
+val cap = someThing.getCapability(Capabilities.EnergyStorage.ITEM)
+if (cap != null) {
+  // ...
+}
+```
+
+- `override fun defineSynchedData()`已被改为`override fun defineSynchedData(builder: SynchedEntityData.Builder)`
+  ，建议同步时将代码修改为
+
+```kotlin
+override fun defineSynchedData(builder: SynchedEntityData.Builder) {
+  with(builder) {
+    builder.define(key, value)
+    builder.define(key, value)
+  }
+}
+```
+
+- `@Mod.EventBusSubscriber`已改为`@EventBusSubscriber`，记得同步更新导入

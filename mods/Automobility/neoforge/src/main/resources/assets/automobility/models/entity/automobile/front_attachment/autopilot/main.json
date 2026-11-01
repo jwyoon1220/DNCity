@@ -1,0 +1,134 @@
+{
+    "texture": {
+        "width": 64,
+        "height": 16
+    },
+    "bones": {
+        "main": {
+            "cuboids": [
+                {
+                    "offset": [
+                        -1,
+                        -1.5,
+                        0
+                    ],
+                    "dimensions": [
+                        2,
+                        2,
+                        8
+                    ],
+                    "uv": [
+                        44,
+                        0
+                    ]
+                },
+                {
+                    "offset": [
+                        -0.5,
+                        -6.5,
+                        -2
+                    ],
+                    "dimensions": [
+                        1,
+                        4,
+                        1
+                    ],
+                    "uv": [
+                        0,
+                        0
+                    ]
+                },
+                {
+                    "offset": [
+                        -7,
+                        -5.5,
+                        -1.5
+                    ],
+                    "dimensions": [
+                        14,
+                        3,
+                        0
+                    ],
+                    "uv": [
+                        2,
+                        13
+                    ]
+                },
+                {
+                    "offset": [
+                        -7,
+                        -2.5,
+                        -3
+                    ],
+                    "dimensions": [
+                        14,
+                        3,
+                        3
+                    ],
+                    "uv": [
+                        30,
+                        10
+                    ]
+                }
+            ],
+            "children": {
+                "glow": {
+                    "transform": {
+                        "origin": [
+                            0,
+                            -7,
+                            -1.5
+                        ]
+                    },
+                    "cuboids": [
+                        {
+                            "offset": [
+                                -1,
+                                -1,
+                                -1
+                            ],
+                            "dimensions": [
+                                2,
+                                2,
+                                2
+                            ],
+                            "uv": [
+                                4,
+                                0
+                            ]
+                        }
+                    ],
+                    "children": {}
+                },
+                "light": {
+                    "transform": {
+                        "origin": [
+                            -0.5,
+                            -2.5,
+                            -1
+                        ]
+                    },
+                    "cuboids": [
+                        {
+                            "offset": [
+                                0,
+                                -5,
+                                -1
+                            ],
+                            "dimensions": [
+                                1,
+                                1,
+                                1
+                            ],
+                            "uv": [
+                                0,
+                                0
+                            ]
+                        }
+                    ],
+                    "children": {}
+                }
+            }
+        }
+    }
+}

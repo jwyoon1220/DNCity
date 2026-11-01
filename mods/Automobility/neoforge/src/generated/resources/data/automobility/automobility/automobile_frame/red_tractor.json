@@ -1,0 +1,85 @@
+{
+  "display": {
+    "driver_seat": [
+      0.0,
+      9.0,
+      0.0
+    ],
+    "engine_position": [
+      0.0,
+      8.0,
+      -9.0
+    ],
+    "front_attachment_offset": 19.0,
+    "length_pixels": 24.0,
+    "model": "automobility:frame/tractor",
+    "rear_attachment_offset": 12.0,
+    "texture": "automobility:textures/entity/automobile/frame/red_tractor.png",
+    "wheels": [
+      {
+        "end": "back",
+        "forward": -2.0,
+        "right": -7.0,
+        "scale": 1.8,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "back",
+        "forward": -2.0,
+        "right": 7.0,
+        "scale": 1.8,
+        "side": "right",
+        "yaw": 180.0
+      },
+      {
+        "end": "front",
+        "forward": 15.0,
+        "right": -1.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "front",
+        "forward": 15.0,
+        "right": 1.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      }
+    ]
+  },
+  "hitboxes": [
+    {
+      "height": 0.8,
+      "origin": [
+        0.0,
+        0.4,
+        0.0
+      ],
+      "width": 1.1
+    },
+    {
+      "height": 1.2,
+      "origin": [
+        0.0,
+        0.6,
+        0.7
+      ],
+      "width": 0.9
+    }
+  ],
+  "horn": {
+    "loop_end": 0.3138,
+    "loop_start": 0.2019,
+    "pitches": [
+      1.0594631,
+      1.2599211
+    ],
+    "sound": {
+      "sound_id": "automobility:entity.automobile.brass_horn"
+    }
+  },
+  "weight": 0.9
+}

@@ -1,0 +1,10 @@
+{
+  "display": {
+    "model": "automobility:wheel/tractor",
+    "radius": 3.625,
+    "texture": "automobility:textures/entity/automobile/wheel/tractor.png",
+    "width": 3.0
+  },
+  "grip": 0.69,
+  "size": 1.05
+}

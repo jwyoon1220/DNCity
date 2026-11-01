@@ -1,0 +1,23 @@
+{
+  "parent": "automobility:block/template_autopilot_sign_right",
+  "textures": {
+    "sign": "automobility:block/autopilot_sign_stop"
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [ 30, -20, 0 ],
+      "translation": [ 0, 4, 0],
+      "scale": [ 0.75, 0.75, 0.75 ]
+    },
+    "firstperson_righthand": {
+      "rotation": [ 0, 0, 0 ],
+      "translation": [ -6, 2, 0 ],
+      "scale": [ 0.7, 0.7, 0.7 ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [ 0, 0, 0 ],
+      "translation": [ -6, 2, 0 ],
+      "scale": [ 0.7, 0.7, 0.7 ]
+    }
+  }
+}

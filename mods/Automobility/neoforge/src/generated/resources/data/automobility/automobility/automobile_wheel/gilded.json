@@ -1,0 +1,10 @@
+{
+  "display": {
+    "model": "automobility:wheel/carriage",
+    "radius": 5.0,
+    "texture": "automobility:textures/entity/automobile/wheel/gilded.png",
+    "width": 2.0
+  },
+  "grip": 0.45,
+  "size": 1.05
+}

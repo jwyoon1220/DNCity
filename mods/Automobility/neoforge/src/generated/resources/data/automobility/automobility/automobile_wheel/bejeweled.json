@@ -1,0 +1,10 @@
+{
+  "display": {
+    "model": "automobility:wheel/carriage",
+    "radius": 5.0,
+    "texture": "automobility:textures/entity/automobile/wheel/bejeweled.png",
+    "width": 2.0
+  },
+  "grip": 0.475,
+  "size": 1.05
+}

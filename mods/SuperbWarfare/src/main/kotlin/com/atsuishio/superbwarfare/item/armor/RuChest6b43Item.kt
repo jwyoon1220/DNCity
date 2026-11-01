@@ -1,0 +1,75 @@
+package com.atsuishio.superbwarfare.item.armor
+
+import com.atsuishio.superbwarfare.Mod
+import com.atsuishio.superbwarfare.Mod.Companion.loc
+import com.atsuishio.superbwarfare.init.ModAttributes
+import com.atsuishio.superbwarfare.init.ModItems
+import com.atsuishio.superbwarfare.resource.model.ArmorModelReloadListener
+import com.atsuishio.superbwarfare.tiers.ModArmorMaterial
+import com.github.mcmodderanchor.simplebedrockmodel.v2.client.renderer.GeoArmorRendererV2
+import net.minecraft.client.model.HumanoidModel
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.EquipmentSlotGroup
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.ai.attributes.AttributeModifier
+import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.component.ItemAttributeModifiers
+import net.neoforged.bus.api.SubscribeEvent
+import net.neoforged.fml.common.EventBusSubscriber
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent
+import kotlin.math.max
+
+class RuChest6b43Item : ArmorItem(
+    ModArmorMaterial.CEMENTED_CARBIDE,
+    Type.CHESTPLATE,
+    Properties().durability(Type.CHESTPLATE.getDurability(50))
+) {
+    @EventBusSubscriber
+    companion object {
+        val TEXTURE = loc("textures/bedrock/armor/ru_chest_6b43.png")
+        val MODEL = loc("models/bedrock/armor/ru_chest_6b43.geo.json")
+
+        @SubscribeEvent
+        fun registerRender(event: RegisterClientExtensionsEvent) {
+            event.registerItem(object : IClientItemExtensions {
+                private var renderer: GeoArmorRendererV2? = null
+
+                override fun getHumanoidArmorModel(
+                    livingEntity: LivingEntity,
+                    itemStack: ItemStack,
+                    equipmentSlot: EquipmentSlot,
+                    original: HumanoidModel<*>
+                ): HumanoidModel<*> {
+                    if (this.renderer == null) {
+                        this.renderer = GeoArmorRendererV2(
+                            ArmorModelReloadListener.getModel(MODEL),
+                            equipmentSlot,
+                            TEXTURE
+                        )
+                    }
+
+                    this.renderer!!.preparePose(livingEntity, itemStack, equipmentSlot, original)
+                    return this.renderer!!
+                }
+            }, ModItems.RU_CHEST_6B43)
+        }
+    }
+
+    override fun getDefaultAttributeModifiers(stack: ItemStack): ItemAttributeModifiers {
+        val modifiers = super.getDefaultAttributeModifiers(stack)
+        val list = ArrayList<ItemAttributeModifiers.Entry>(modifiers.modifiers())
+        list.add(
+            ItemAttributeModifiers.Entry(
+                ModAttributes.BULLET_RESISTANCE, AttributeModifier(
+                    Mod.ATTRIBUTE_MODIFIER,
+                    0.5 * max(0.0, 1 - stack.damageValue.toDouble() / stack.maxDamage),
+                    AttributeModifier.Operation.ADD_VALUE
+                ),
+                EquipmentSlotGroup.bySlot(this.type.slot)
+            )
+        )
+        return ItemAttributeModifiers(list, true)
+    }
+}

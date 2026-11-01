@@ -1,0 +1,75 @@
+{
+  "display": {
+    "driver_seat": [
+      0.0,
+      11.0,
+      0.0
+    ],
+    "engine_position": [
+      0.0,
+      17.0,
+      -7.0
+    ],
+    "front_attachment_offset": 11.0,
+    "length_pixels": 25.0,
+    "model": "automobility:frame/shopping_cart",
+    "rear_attachment_offset": 11.0,
+    "texture": "automobility:textures/entity/automobile/frame/shopping_cart.png",
+    "wheels": [
+      {
+        "end": "front",
+        "forward": 8.5,
+        "right": -6.025,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "back",
+        "forward": -8.5,
+        "right": -6.025,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "front",
+        "forward": 8.5,
+        "right": 6.025,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      },
+      {
+        "end": "back",
+        "forward": -8.5,
+        "right": 6.025,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      }
+    ]
+  },
+  "hitboxes": [
+    {
+      "height": 1.6,
+      "origin": [
+        0.0,
+        0.8,
+        0.0
+      ],
+      "width": 1.1
+    }
+  ],
+  "horn": {
+    "loop_end": 0.6605,
+    "loop_start": 0.09435,
+    "pitches": [
+      1.4983071
+    ],
+    "sound": {
+      "sound_id": "automobility:entity.automobile.disc_horn"
+    }
+  },
+  "weight": 0.25
+}

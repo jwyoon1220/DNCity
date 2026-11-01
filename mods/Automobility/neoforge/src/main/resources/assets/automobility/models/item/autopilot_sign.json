@@ -1,0 +1,11 @@
+{
+    "parent": "automobility:block/autopilot_sign_right",
+    "overrides": [
+        {
+            "predicate": {
+                "automobility:stop": 1
+            },
+            "model": "automobility:block/autopilot_sign_stop"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "a": {
+      "tag": "c:plates/steel"
+    }
+  },
+  "pattern": [
+    "a",
+    "a",
+    "a"
+  ],
+  "result": {
+    "count": 1,
+    "id": "superbwarfare:mortar_barrel"
+  }
+}

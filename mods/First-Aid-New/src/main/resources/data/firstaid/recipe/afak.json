@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:leather"
+    },
+    {
+      "item": "minecraft:green_dye"
+    },
+    {
+      "item": "firstaid:bandage"
+    },
+    {
+      "item": "firstaid:bandage"
+    },
+    {
+      "item": "firstaid:tourniquet"
+    },
+    {
+      "item": "minecraft:kelp"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "firstaid:afak"
+  }
+}

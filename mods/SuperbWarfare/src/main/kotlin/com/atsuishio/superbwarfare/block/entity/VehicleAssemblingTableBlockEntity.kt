@@ -1,0 +1,37 @@
+package com.atsuishio.superbwarfare.block.entity
+
+import com.atsuishio.superbwarfare.Mod.Companion.loc
+import com.atsuishio.superbwarfare.init.ModBlockEntities
+import com.atsuishio.superbwarfare.inventory.menu.VehicleAssemblingMenu
+import com.atsuishio.superbwarfare.resource.model.BlockModelReloadListener
+import net.minecraft.core.BlockPos
+import net.minecraft.network.chat.Component
+import net.minecraft.world.MenuProvider
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.ContainerLevelAccess
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.state.BlockState
+
+open class VehicleAssemblingTableBlockEntity(pPos: BlockPos, pBlockState: BlockState) :
+    BlockEntity(ModBlockEntities.VEHICLE_ASSEMBLING_TABLE.get(), pPos, pBlockState), MenuProvider {
+
+    open val modelInstance = BlockModelReloadListener.getModel(MODEL)?.createInstance()
+
+    override fun getDisplayName(): Component {
+        return Component.empty()
+    }
+
+    override fun createMenu(pContainerId: Int, pPlayerInventory: Inventory, pPlayer: Player): AbstractContainerMenu {
+        return VehicleAssemblingMenu(
+            pContainerId,
+            pPlayerInventory,
+            ContainerLevelAccess.create(pPlayer.level(), this.worldPosition)
+        )
+    }
+
+    companion object {
+        val MODEL = loc("models/bedrock/block/vehicle_assembling_table.geo.json")
+    }
+}

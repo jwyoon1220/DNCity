@@ -1,0 +1,94 @@
+{
+  "display": {
+    "driver_seat": [
+      0.0,
+      6.0,
+      0.0
+    ],
+    "engine_position": [
+      0.0,
+      10.5,
+      -19.5
+    ],
+    "front_attachment_offset": 23.0,
+    "length_pixels": 44.0,
+    "model": "automobility:frame/c_arr",
+    "rear_attachment_offset": 23.0,
+    "texture": "automobility:textures/entity/automobile/frame/c_arr.png",
+    "wheels": [
+      {
+        "end": "front",
+        "forward": 22.25,
+        "right": -8.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "back",
+        "forward": -22.25,
+        "right": -8.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "front",
+        "forward": 22.25,
+        "right": 8.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      },
+      {
+        "end": "back",
+        "forward": -22.25,
+        "right": 8.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      }
+    ]
+  },
+  "hitboxes": [
+    {
+      "height": 0.9,
+      "origin": [
+        0.0,
+        1.1,
+        0.0
+      ],
+      "width": 1.3
+    },
+    {
+      "height": 0.8,
+      "origin": [
+        0.0,
+        0.4,
+        1.5
+      ],
+      "width": 1.1
+    },
+    {
+      "height": 0.8,
+      "origin": [
+        0.0,
+        0.4,
+        -1.5
+      ],
+      "width": 1.1
+    }
+  ],
+  "horn": {
+    "loop_end": 0.3138,
+    "loop_start": 0.2019,
+    "pitches": [
+      0.70710677
+    ],
+    "sound": {
+      "sound_id": "automobility:entity.automobile.brass_horn"
+    }
+  },
+  "weight": 0.85,
+  "width": 1.5
+}

@@ -1,0 +1,39 @@
+{
+  "targets": [
+    "swap",
+    "swap2"
+  ],
+  "passes": [
+    {
+      "name": "firstaid_saturation_boost",
+      "intarget": "minecraft:main",
+      "outtarget": "swap",
+      "uniforms": [
+        {
+          "name": "Amount",
+          "values": [
+            0.16
+          ]
+        }
+      ]
+    },
+    {
+      "name": "firstaid_pain_pulse",
+      "intarget": "swap",
+      "outtarget": "swap2",
+      "uniforms": [
+        {
+          "name": "Strength",
+          "values": [
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "blit",
+      "intarget": "swap2",
+      "outtarget": "minecraft:main"
+    }
+  ]
+}

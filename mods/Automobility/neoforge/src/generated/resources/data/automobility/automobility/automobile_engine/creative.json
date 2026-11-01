@@ -1,0 +1,22 @@
+{
+  "display": {
+    "exhausts": [
+      {
+        "pitch": 90.0,
+        "position": [
+          0.0,
+          7.0,
+          -7.0
+        ],
+        "yaw": 0.0
+      }
+    ],
+    "model": "automobility:engine/creative",
+    "texture": "automobility:textures/entity/automobile/engine/creative.png"
+  },
+  "sound": {
+    "sound_id": "automobility:entity.automobile.creative_engine"
+  },
+  "speed": 1.0,
+  "torque": 1.0
+}

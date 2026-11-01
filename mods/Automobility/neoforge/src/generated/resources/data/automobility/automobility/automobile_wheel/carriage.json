@@ -1,0 +1,10 @@
+{
+  "display": {
+    "model": "automobility:wheel/carriage",
+    "radius": 5.0,
+    "texture": "automobility:textures/entity/automobile/wheel/carriage.png",
+    "width": 2.0
+  },
+  "grip": 0.2,
+  "size": 1.05
+}

@@ -1,0 +1,13 @@
+{
+  "_empty": true,
+  "display": {
+    "exhausts": [],
+    "model": "automobility:empty",
+    "texture": "minecraft:empty"
+  },
+  "sound": {
+    "sound_id": "minecraft:entity.minecart.inside"
+  },
+  "speed": 0.01,
+  "torque": 0.01
+}

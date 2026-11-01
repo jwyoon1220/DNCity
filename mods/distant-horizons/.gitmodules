@@ -1,0 +1,4 @@
+[submodule "coreSubProjects"]
+	path = coreSubProjects
+	url = https://github.com/SunsetDN/distant-horizons.git
+	branch = codex/dncity-core-1.21.1

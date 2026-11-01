@@ -1,0 +1,75 @@
+{
+  "display": {
+    "driver_seat": [
+      0.0,
+      16.0,
+      0.0
+    ],
+    "engine_position": [
+      0.0,
+      6.0,
+      -8.0
+    ],
+    "front_attachment_offset": 9.0,
+    "length_pixels": 20.0,
+    "model": "automobility:frame/pineapple",
+    "rear_attachment_offset": 9.0,
+    "texture": "automobility:textures/entity/automobile/frame/pineapple.png",
+    "wheels": [
+      {
+        "end": "front",
+        "forward": 5.0,
+        "right": -9.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "back",
+        "forward": -5.0,
+        "right": -9.0,
+        "scale": 1.0,
+        "side": "left",
+        "yaw": 0.0
+      },
+      {
+        "end": "front",
+        "forward": 5.0,
+        "right": 9.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      },
+      {
+        "end": "back",
+        "forward": -5.0,
+        "right": 9.0,
+        "scale": 1.0,
+        "side": "right",
+        "yaw": 180.0
+      }
+    ]
+  },
+  "hitboxes": [
+    {
+      "height": 1.2,
+      "origin": [
+        0.0,
+        0.6,
+        0.0
+      ],
+      "width": 1.1
+    }
+  ],
+  "horn": {
+    "loop_end": -1.0,
+    "loop_start": -1.0,
+    "pitches": [
+      1.0
+    ],
+    "sound": {
+      "sound_id": "automobility:entity.automobile.party_horn"
+    }
+  },
+  "weight": 0.75
+}

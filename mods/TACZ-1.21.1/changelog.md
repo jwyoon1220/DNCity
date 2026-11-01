@@ -1,0 +1,1 @@
+- More fixes for the rendering issues introduced in 1.1.8-hotfix-r4

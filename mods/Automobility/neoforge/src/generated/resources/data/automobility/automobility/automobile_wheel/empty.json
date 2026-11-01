@@ -1,0 +1,11 @@
+{
+  "_empty": true,
+  "display": {
+    "model": "automobility:empty",
+    "radius": 1.0,
+    "texture": "minecraft:empty",
+    "width": 1.0
+  },
+  "grip": 0.01,
+  "size": 0.01
+}

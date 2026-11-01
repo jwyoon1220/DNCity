@@ -1,0 +1,31 @@
+{
+  "display": {
+    "exhausts": [
+      {
+        "pitch": 26.0,
+        "position": [
+          4.0,
+          9.3,
+          -7.75
+        ],
+        "yaw": 0.0
+      },
+      {
+        "pitch": 26.0,
+        "position": [
+          -4.0,
+          9.3,
+          -7.75
+        ],
+        "yaw": 0.0
+      }
+    ],
+    "model": "automobility:engine/gold",
+    "texture": "automobility:textures/entity/automobile/engine/gold.png"
+  },
+  "sound": {
+    "sound_id": "automobility:entity.automobile.gold_engine"
+  },
+  "speed": 0.75,
+  "torque": 0.8
+}

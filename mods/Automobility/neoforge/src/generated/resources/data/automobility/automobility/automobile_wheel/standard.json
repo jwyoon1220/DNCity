@@ -1,0 +1,10 @@
+{
+  "display": {
+    "model": "automobility:wheel/standard",
+    "radius": 3.0,
+    "texture": "automobility:textures/entity/automobile/wheel/standard.png",
+    "width": 3.0
+  },
+  "grip": 0.5,
+  "size": 0.6
+}

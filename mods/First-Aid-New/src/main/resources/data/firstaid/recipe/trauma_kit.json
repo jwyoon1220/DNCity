@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "firstaid:bandage"
+    },
+    {
+      "item": "firstaid:bandage"
+    },
+    {
+      "item": "firstaid:plaster"
+    },
+    {
+      "item": "firstaid:tourniquet"
+    },
+    {
+      "item": "minecraft:leather"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "firstaid:trauma_kit"
+  }
+}
