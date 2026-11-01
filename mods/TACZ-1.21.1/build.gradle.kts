@@ -81,6 +81,8 @@ repositories {
         content {
             includeGroup("com.github.rtyley")
             includeGroup("com.github.FiguraMC.luaj")
+            // SimpleBedrockModel: same coordinates SuperbWarfare embeds, so JarJar merges them into one copy (see libs.versions.toml).
+            includeGroup("com.github.MCModderAnchor")
         }
     }
     maven("https://maven.shedaniel.me")

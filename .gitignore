@@ -28,3 +28,4 @@ install_manifest.txt
 
 # Generated Windows native libraries (already tracked runtime DLLs stay tracked)
 *.[dD][lL][lL]
+/engine/launcher/bundled-mods/

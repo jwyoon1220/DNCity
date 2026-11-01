@@ -41,6 +41,7 @@ fun main(args: Array<String>) {
         val paths = Paths(root, settings.resolvedGameDir(root))
         val id = Installer(paths, settings.resolvedJava(), ConsoleProgress)
             .installAll(settings.minecraftVersion, settings.neoForgeVersion)
+        Installer(paths, settings.resolvedJava(), ConsoleProgress).syncBundledMods()
         val proc = GameLauncher(paths, settings).start(id, Session.offline(settings.username))
         proc.inputStream.bufferedReader().forEachLine { println(it) }
         System.exit(proc.waitFor())

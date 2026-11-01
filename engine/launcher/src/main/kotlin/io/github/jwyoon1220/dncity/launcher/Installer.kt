@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import java.io.File
 import java.io.IOException
+import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -22,6 +23,15 @@ class Installer(private val paths: Paths, private val java: String, private val 
         const val MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
         const val ASSET_URL = "https://resources.download.minecraft.net/"
         const val NEOFORGE_MAVEN = "https://maven.neoforged.net/releases/net/neoforged/neoforge/"
+
+        /** `bundled-mods/` next to the launcher jar (jpackage puts it there), or `-Ddncity.launcher.bundledMods=<dir>`. */
+        fun bundledModsDir(): Path? {
+            System.getProperty("dncity.launcher.bundledMods")?.let { return Path.of(it).takeIf(Files::isDirectory) }
+            return runCatching {
+                val jar = Path.of(Installer::class.java.protectionDomain.codeSource.location.toURI())
+                jar.parent?.resolve("bundled-mods")?.takeIf(Files::isDirectory)
+            }.getOrNull()
+        }
 
         /** Newest stable NeoForge for a Minecraft version (`1.21.1` -> `21.1.x`), or null if the lookup fails. */
         fun latestNeoForge(minecraftVersion: String): String? = try {
@@ -215,6 +225,77 @@ class Installer(private val paths: Paths, private val java: String, private val 
             if (code != 0) throw IOException("NeoForge 프로세서 실패 (exit $code): $mainClass")
         }
         progress.fraction(1.0)
+    }
+
+    // ------------------------------------------------------------------ bundled mods
+
+    /**
+     * Puts the mods this project ships (dncity, TACZ, First Aid, SuperbWarfare, ... bundled into the launcher at build
+     * time) plus Kotlin for Forge into `<gameDir>/mods`. Only files listed in `.dncity-managed` are ever replaced or
+     * removed, so mods the player added themselves are left alone.
+     */
+    fun syncBundledMods() {
+        val modsDir = paths.gameDir.resolve("mods")
+        Files.createDirectories(modsDir)
+        val record = modsDir.resolve(".dncity-managed")
+        val previous = if (Files.isRegularFile(record)) Files.readAllLines(record).filter { it.isNotBlank() } else emptyList()
+        val wanted = LinkedHashSet<String>()
+
+        progress.status("모드 동기화 중")
+        progress.fraction(0.0)
+        val sources = bundledModsDir()?.let { dir ->
+            Files.list(dir).use { st -> st.filter { it.fileName.toString().endsWith(".jar") }.toList() }
+        }.orEmpty()
+        if (sources.isEmpty()) progress.log("번들된 모드가 없습니다 (개발용 런처 빌드?)")
+        sources.forEachIndexed { i, src ->
+            val name = src.fileName.toString()
+            wanted += name
+            val dest = modsDir.resolve(name)
+            val same = Files.isRegularFile(dest) && Files.size(dest) == Files.size(src) &&
+                sha1Hex(dest).equals(sha1Hex(src), ignoreCase = true)
+            if (!same) {
+                progress.log("모드 설치: $name")
+                Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING)
+            }
+            progress.fraction((i + 1).toDouble() / sources.size)
+        }
+
+        wanted += ensureKotlinForForge(modsDir)
+
+        for (old in previous) {
+            if (old !in wanted && !old.contains('/') && !old.contains('\\') && old != "..") {
+                progress.log("이전 모드 제거: $old")
+                Files.deleteIfExists(modsDir.resolve(old))
+            }
+        }
+        Files.write(record, wanted.toList())
+    }
+
+    /**
+     * The pack's mod loader (`modLoader = "kotlinforforge"`) is a mod of its own, so it has to sit in mods/. Any
+     * `kotlinforforge*.jar` already there is kept (offline start, or the player's own choice); otherwise the newest
+     * 1.21.1/NeoForge build is fetched from Modrinth (SuperbWarfare needs >= 5.8, which is why no old version is pinned).
+     */
+    private fun ensureKotlinForForge(modsDir: Path): String {
+        Files.list(modsDir).use { st ->
+            st.map { it.fileName.toString() }
+                .filter { it.startsWith("kotlinforforge", ignoreCase = true) && it.endsWith(".jar") }
+                .findFirst().orElse(null)
+        }?.let { return it }
+
+        progress.status("Kotlin for Forge 다운로드 중")
+        val mc = URLEncoder.encode("[\"1.21.1\"]", Charsets.UTF_8)
+        val loader = URLEncoder.encode("[\"neoforge\"]", Charsets.UTF_8)
+        val versions = JsonParser.parseString(
+            Http.string("https://api.modrinth.com/v2/project/kotlin-for-forge/version?loaders=$loader&game_versions=$mc"),
+        ).asJsonArray
+        val files = versions.firstOrNull()?.asJsonObject?.arr("files")?.map { it.asJsonObject }
+            ?: throw IOException("Kotlin for Forge를 찾을 수 없습니다 (Modrinth)")
+        val file = files.firstOrNull { it.get("primary")?.asBoolean == true } ?: files.first()
+        val name = file.str("filename")!!
+        require(!name.contains('/') && !name.contains('\\') && name.endsWith(".jar")) { "잘못된 파일명: $name" }
+        Http.download(file.str("url")!!, modsDir.resolve(name), file.obj("hashes")?.str("sha1"))
+        return name
     }
 
     // ------------------------------------------------------------------ pack sync

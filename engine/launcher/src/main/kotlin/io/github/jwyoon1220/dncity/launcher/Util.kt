@@ -48,8 +48,14 @@ object Platform {
     }
 
     /** The java binary of the JVM running the launcher (the jpackage runtime when installed). */
-    fun bundledJava(): String =
-        File(System.getProperty("java.home"), if (osName == "windows") "bin/java.exe" else "bin/java").absolutePath
+    fun bundledJava(): String {
+        val exe = if (osName == "windows") "bin/java.exe" else "bin/java"
+        val own = File(System.getProperty("java.home"), exe)
+        if (own.isFile) return own.absolutePath
+        // A runtime stripped of its launchers: fall back to JAVA_HOME, then whatever `java` is on the PATH.
+        System.getenv("JAVA_HOME")?.let { File(it, exe).takeIf(File::isFile)?.let { f -> return f.absolutePath } }
+        return "java"
+    }
 }
 
 /** All on-disk locations, mirroring the vanilla `.minecraft` layout. */

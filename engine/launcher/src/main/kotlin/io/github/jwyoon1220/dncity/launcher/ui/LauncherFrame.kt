@@ -288,6 +288,7 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
                 val paths = Paths(root, settings.resolvedGameDir(root))
                 val installer = Installer(paths, settings.resolvedJava(), progress)
                 val id = installer.installAll(settings.minecraftVersion, settings.neoForgeVersion)
+                installer.syncBundledMods()
                 installer.syncPack(settings.packUrl)
 
                 progress.status("게임 실행 중")

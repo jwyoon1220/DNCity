@@ -502,7 +502,11 @@ dependencies {
     implementation("org.lwjgl:lwjgl-nanovg:3.3.3")
     runtimeOnly("org.lwjgl:lwjgl-nanovg:3.3.3:natives-windows")
     jarJar("org.lwjgl:lwjgl-nanovg:3.3.3")
-    jarJar("org.lwjgl:lwjgl-nanovg:3.3.3:natives-windows")
+    // NOT jarJar("org.lwjgl:lwjgl-nanovg:3.3.3:natives-windows"): JarJar identifies an embedded jar by group:artifact only,
+    // so the classifier jar and the main jar collided, NeoForge kept just the natives one and the game died with
+    // "Module org.lwjgl.nanovg not found, required by org.lwjgl.nanovg.natives" (invisible in runClient, where both are
+    // on the classpath). The natives jar is re-published below under its own artifact name instead.
+    jarJar(":lwjgl-nanovg-natives-windows:3.3.3")
 
     // BouncyCastle OpenPGP (io.github.jwyoon1220.dncity.security's login-gate PGP
     // challenge/response, see PgpCrypto) -- not shipped by NeoForge/Minecraft, so jarJar'd the
@@ -513,6 +517,25 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
     jarJar("org.bouncycastle:bcpg-jdk18on:1.78.1")
     jarJar("org.bouncycastle:bcprov-jdk18on:1.78.1")
+    // bcpg's module (org.bouncycastle.pg) requires org.bouncycastle.util, which is bcutil: a transitive dependency that only
+    // runClient's classpath picks up. jarJar does not follow it, so a distributed jar failed with "Module org.bouncycastle.util not found".
+    jarJar("org.bouncycastle:bcutil-jdk18on:1.78.1")
+}
+
+// The natives-windows jar of lwjgl-nanovg under a distinct artifact name (see the jarJar comment in `dependencies`).
+// Copied at configuration time on purpose: Gradle resolves the jarJar configuration while it builds the task graph, i.e.
+// before any copy task could have run, and a flatDir file has to exist by then.
+run {
+    val natives = configurations.detachedConfiguration(
+        dependencies.create("org.lwjgl:lwjgl-nanovg:3.3.3:natives-windows"),
+    ).apply { isTransitive = false }.singleFile
+    val dir = layout.buildDirectory.dir("jarjar-libs").get().asFile
+    dir.mkdirs()
+    val target = File(dir, "lwjgl-nanovg-natives-windows-3.3.3.jar")
+    if (!target.isFile || target.length() != natives.length()) natives.copyTo(target, overwrite = true)
+}
+repositories {
+    flatDir { dirs(layout.buildDirectory.dir("jarjar-libs")) }
 }
 
 // The ModernUI-MC universal jar (see the fileTree dependency above) has to actually be built
@@ -572,12 +595,6 @@ val stageBrowserHostJar = tasks.register<Copy>("stageBrowserHostJar") {
 sourceSets["main"].resources.srcDir(browserHostResourceDir)
 tasks.named("processResources") {
     dependsOn(stageBrowserHostJar)
-}
-
-// engine/launcher: every root `build` also builds the launcher (app folder with DNCity.exe / bin/DNCity,
-// plus an MSI when the WiX Toolset v3 is installed). Output: engine/launcher/build/dist and build/installer.
-tasks.named("build") {
-    dependsOn(gradle.includedBuild("launcher").task(":assemble"))
 }
 
 // Example configuration to allow publishing using the maven-publish plugin
@@ -728,4 +745,29 @@ val collectDistributionJars = tasks.register<Sync>("collectDistributionJars") {
 
 tasks.named("assemble") {
     dependsOn(collectDistributionJars)
+}
+
+// engine/launcher: every root `build` also builds the launcher with this project's mods inside. The mods (dncity itself +
+// everything collectDistributionJars gathers) are copied to engine/launcher/bundled-mods, then the launcher is built as a
+// nested build (jpackage -> engine/launcher/build/dist/DNCity/DNCity.exe, plus an MSI when the WiX Toolset v3 is installed).
+// A nested GradleBuild rather than includeBuild because the launcher needs this project's outputs as input.
+val stageLauncherMods = tasks.register<Sync>("stageLauncherMods") {
+    group = "distribution"
+    description = "Copies dncity and the pack's mod jars into engine/launcher/bundled-mods for the launcher to ship."
+    dependsOn(collectDistributionJars, tasks.jar)
+    from(layout.buildDirectory.dir("libs")) {
+        include("*.jar")
+        exclude("*-sources.jar", "*-javadoc.jar", "*-slim.jar")
+    }
+    into(file("engine/launcher/bundled-mods"))
+}
+val buildLauncher = tasks.register<GradleBuild>("buildLauncher") {
+    group = "distribution"
+    description = "Builds the launcher (app folder, and MSI when WiX is installed) with the mods bundled."
+    dir = file("engine/launcher")
+    setTasks(listOf("assemble"))
+    dependsOn(stageLauncherMods)
+}
+tasks.named("build") {
+    dependsOn(buildLauncher)
 }

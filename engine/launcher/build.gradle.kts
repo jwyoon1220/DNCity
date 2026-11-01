@@ -68,10 +68,14 @@ val installerDir = layout.buildDirectory.dir("installer")
 // The bundled runtime also runs Minecraft itself (unless the user points the launcher at another
 // Java), so it needs the modules Minecraft/NeoForge use, not only what the launcher's own jar needs.
 val runtimeModules = listOf(
-    "java.base", "java.desktop", "java.logging", "java.management", "java.naming", "java.net.http",
-    "java.sql", "java.xml", "java.instrument", "java.compiler", "java.scripting",
-    "java.security.jgss", "java.prefs", "jdk.unsupported", "jdk.crypto.ec", "jdk.management",
-    "jdk.naming.dns", "jdk.zipfs", "jdk.jfr", "jdk.httpserver", "jdk.net", "jdk.attach",
+    // java.se = every standard java.* module (log4j needs java.rmi, mods use java.sql/java.management/java.desktop, ...).
+    // A hand-picked list failed in the installed launcher ("Module java.rmi not found, required by log4j.core"),
+    // which a dev machine with a full JDK never shows.
+    "java.se",
+    "jdk.unsupported", "jdk.crypto.ec", "jdk.crypto.cryptoki", "jdk.management", "jdk.management.agent",
+    "jdk.naming.dns", "jdk.naming.rmi", "jdk.zipfs", "jdk.jfr", "jdk.httpserver", "jdk.net", "jdk.attach",
+    "jdk.charsets", "jdk.localedata", "jdk.security.auth", "jdk.security.jgss", "jdk.xml.dom", "jdk.dynalink",
+    "jdk.jdi", "jdk.accessibility",
 ).joinToString(",")
 
 fun jpackageExecutable(): String {
@@ -94,8 +98,11 @@ fun findWix(): File? {
     return null
 }
 
+// `bundled-mods/` is filled by the ROOT project's `stageLauncherMods` task (dncity + every mod of the pack) right
+// before it runs this build; jpackage copies it next to the launcher jar, where Installer.bundledModsDir() finds it.
 val stageJpackageInput = tasks.register<Sync>("stageJpackageInput") {
     from(tasks.shadowJar)
+    from(layout.projectDirectory.dir("bundled-mods")) { into("bundled-mods") }
     into(jpackageInput)
 }
 
@@ -120,6 +127,9 @@ val packageApp = tasks.register<Exec>("packageApp") {
             "--dest", distDir.get().asFile.absolutePath,
             "--add-modules", runtimeModules,
             "--java-options", "-Dfile.encoding=UTF-8",
+            // jpackage's default jlink options include --strip-native-commands, which leaves the runtime without
+            // bin/java.exe -- but this runtime also starts Minecraft (GameLauncher). Replacing the list keeps java.exe.
+            "--jlink-options", "--strip-debug --no-man-pages --no-header-files",
         )
         args(a)
     }

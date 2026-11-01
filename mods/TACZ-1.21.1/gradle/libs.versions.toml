@@ -8,7 +8,7 @@ minecraft = "1.21.1"
 minecraft-range = "[1.21.1]"
 mod-publish = "2.1.1"
 
-simplebedrockmodel = "2.2.2-neoforge-mc1.21.1"
+simplebedrockmodel = "2.5.1.1-neoforge-mc1.21.1"
 mae = "1.1.2"
 commons-math = "3.6.1"
 luaj = "3.0.8-figura"
@@ -28,7 +28,7 @@ kubejs = "2101.7.1-build.181"
 rhino = "2101.2.7-build.74"
 
 [libraries]
-com-github-mcmodderanchor-simplebedrockmodel = { module = "com.github.mcmodderanchor:simplebedrockmodel", version.ref = "simplebedrockmodel" }
+com-github-mcmodderanchor-simplebedrockmodel = { module = "com.github.MCModderAnchor:SimpleBedrockModel", version.ref = "simplebedrockmodel" }
 com-maydaymemory-mae = { module = "com.maydaymemory:mae", version.ref = "mae" }
 org-apache-commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commons-math" }
 com-github-figuraMC-luaj-core = { module = "com.github.FiguraMC.luaj:luaj-core", version.ref = "luaj" }
