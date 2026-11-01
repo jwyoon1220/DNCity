@@ -71,6 +71,12 @@ includeBuild("engine/kcp") {
 // output.
 includeBuild("engine/browserhost")
 
+// engine/launcher (standalone Swing game launcher, packaged by jpackage into an app folder and, when the
+// WiX Toolset is installed, an MSI -- see its own build.gradle.kts). Included WITHOUT a
+// dependencySubstitution: nothing depends on it as a library; the root `build` task just runs its
+// `assemble` so a normal build also produces the launcher.
+includeBuild("engine/launcher")
+
 // Automobility (mods/Automobility) -- this fork strips it down to a single neoforge subproject
 // (see mods/Automobility/settings.gradle.kts) since upstream's common/fabric setup pulled in
 // fabric-loom, which needs a newer Gradle than this repo runs.

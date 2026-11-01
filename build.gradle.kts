@@ -574,6 +574,12 @@ tasks.named("processResources") {
     dependsOn(stageBrowserHostJar)
 }
 
+// engine/launcher: every root `build` also builds the launcher (app folder with DNCity.exe / bin/DNCity,
+// plus an MSI when the WiX Toolset v3 is installed). Output: engine/launcher/build/dist and build/installer.
+tasks.named("build") {
+    dependsOn(gradle.includedBuild("launcher").task(":assemble"))
+}
+
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {
     publications {

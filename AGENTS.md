@@ -1136,6 +1136,29 @@ held everything behind it. Three changes, plus one bug found on the way:
   network code (it still uses TCP, only paced). Unit tests: `VoiceKcpProtocolTest`. Compiled against 1.21.1/NeoForge with the
   voice/phone/MIDI receivers stubbed; **not yet run in a client or against a real server**.
 
+## Architecture: game launcher (`engine/launcher`, marker `dncity-launcher`)
+
+Standalone Kotlin/Swing launcher (no LAF library: `ui/Widgets.kt` paints everything), structured after CmlLib.Core
+(version manifest -> version json with `inheritsFrom` merge -> libraries/assets -> installer processors -> launch
+argument builder), on `java.net.http` + Gson. Own Gradle project, included in `settings.gradle.kts` *without*
+substitution; the root `build` task depends on its `assemble`.
+- **Install** (`Installer`): vanilla client/libraries/assets from Mojang, then NeoForge (`neo_version`, default
+  `Settings.neoForgeVersion`): downloads the installer jar, writes its `version.json`, unpacks `maven/`, runs the
+  client-side processors from `install_profile.json` (skipped when their outputs' sha1 already match). Idempotent;
+  a finished install starts offline. Optional pack manifest URL (`{"mods":[{"name","url","sha1"}]}`) syncs `mods/`.
+- **Launch** (`GameLauncher`): rules-filtered jvm/game args, `${...}` substitution. The inherited client jar is copied to
+  `versions/<id>/<id>.jar` (NeoForge's bootstraplauncher only ignores `${version_name}.jar`; the vanilla name clashes
+  with the patched `minecraft` module). Commands over 20k chars go through a JDK `@argfile` (CreateProcess limit).
+- **Accounts** (`Auth.kt`): offline (`Session.offline`, vanilla offline UUID) or Microsoft: OAuth device-code flow -> Xbox Live -> XSTS -> Minecraft services -> profile (same chain as CmlLib/XboxAuthNet). Only the refresh token is kept, in `<root>/account.json`, rotated on every launch. Default client id = `00000000402b5328`, exactly what CmlLib.Core.Auth.Microsoft uses (`XboxGameTitles.MinecraftJava`, the official launcher's id, so Mojang's API accepts it; it is NOT DNCity's and can be blocked). Such 16-hex ids use the Live endpoints (`login.live.com/oauth20_connect.srf` / `oauth20_token.srf`); a GUID id uses Entra v2 `consumers`. DNCity's own Azure app "Parin" (`5ac81d8f-ef78-47ca-827b-78335e5e035c`, needs "Allow public client flows") gets HTTP 403 from `login_with_xbox` until Mojang approves it (https://aka.ms/mce-reviewappid); then set it via the settings field, `-Ddncity.msClientId` or env `DNCITY_MS_CLIENT_ID`. Device-code request verified live; full sign-in not run end to end.
+- **Data**: `%APPDATA%/DNCity` (`~/.local/share/dncity`, macOS Application Support), override `-Ddncity.launcher.home`.
+  Debug CLI: `--install` (install only), `--run` (install + start, game output on stdout).
+- **Packaging** (jpackage, part of `assemble`): `build/dist/DNCity/` is a runnable app folder (`DNCity.exe` on Windows,
+  `bin/DNCity` ELF on Linux, bundled Java 21 runtime). `build/installer/DNCity-*.msi` is made only on Windows **with the WiX
+  Toolset v3** installed (`winget install WiXToolset.WiXToolset`); otherwise `packageInstaller` is skipped with a warning.
+  The Linux ELF was not built or run here (Windows machine); no deb/rpm.
+- Verified on Windows: full install into an empty dir and a NeoForge boot to the resource reload. The Swing window and
+  the MSI were not looked at / built.
+
 ## Editing the mod metadata template
 
 `mod_authors`, `mod_description`, and version/range values live in `gradle.properties`, not in
