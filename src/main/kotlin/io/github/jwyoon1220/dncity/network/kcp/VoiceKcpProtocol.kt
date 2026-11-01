@@ -36,6 +36,15 @@ object VoiceKcpProtocol {
      * [io.github.jwyoon1220.dncity.music.MusicAssetSender] and [encodeAssetChunk]. */
     const val TYPE_ASSET_CHUNK: Byte = 8
 
+    /** Client -> server over the reliable lane every [KEEPALIVE_INTERVAL_MS], no body. Audio only flows while someone
+     * talks and KCP sends nothing on an idle session, so without this a player who stayed quiet for
+     * `VoiceKcpServer.SESSION_IDLE_TIMEOUT_MS` lost their session silently (no radio/voice either way until relog),
+     * and a NAT mapping could expire so relays to the player stopped arriving. Going reliable (not raw) also lets the
+     * server learn a changed client address, which the raw lane never accepts. */
+    const val TYPE_KEEPALIVE: Byte = 9
+
+    const val KEEPALIVE_INTERVAL_MS = 5_000L
+
     const val STALE_MS = 250L
 
     /**
@@ -93,6 +102,8 @@ object VoiceKcpProtocol {
     // ---- HELLO: the first message a client sends on a fresh UDP session, proving it holds the
     // secret the server handed it over Minecraft's own (already encrypted/authenticated) channel
     // -- see network.VoiceKcpHandshakePayload. ----
+
+    fun encodeKeepalive(): ByteArray = byteArrayOf(TYPE_KEEPALIVE)
 
     fun encodeHello(conv: Int, secret: Long): ByteArray =
         ByteBuffer.allocate(1 + 4 + 8).put(TYPE_HELLO).putInt(conv).putLong(secret).array()

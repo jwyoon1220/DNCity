@@ -252,6 +252,8 @@ object VoiceKcpServer {
 
         if (!session.authenticated) return
         val type = msg[0]
+        // lastActivityMs and remote were already refreshed by onDatagram
+        if (type == VoiceKcpProtocol.TYPE_KEEPALIVE) return
         if (VoiceKcpProtocol.isAudio(type)) {
             val sentAt = VoiceKcpProtocol.sentAtMs(msg) ?: return
             if (!session.freshness.accept(VoiceKcpProtocol.FreshnessGate.key(type, 0), sentAt)) return

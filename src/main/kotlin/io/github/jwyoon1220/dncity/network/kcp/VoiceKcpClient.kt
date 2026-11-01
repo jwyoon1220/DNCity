@@ -78,6 +78,10 @@ object VoiceKcpClient {
             remoteAddress = remote
             session.send(VoiceKcpProtocol.encodeHello(conv, secret))
             eventLoopGroup.next().scheduleAtFixedRate({ tick() }, 0, TICK_INTERVAL_MS, TimeUnit.MILLISECONDS)
+            eventLoopGroup.next().scheduleAtFixedRate(
+                { kcp?.send(VoiceKcpProtocol.encodeKeepalive()) },
+                VoiceKcpProtocol.KEEPALIVE_INTERVAL_MS, VoiceKcpProtocol.KEEPALIVE_INTERVAL_MS, TimeUnit.MILLISECONDS,
+            )
         } catch (e: Throwable) {
             // Throwable, not Exception -- NativeKcpSession's construction can throw
             // UnsatisfiedLinkError/ExceptionInInitializerError (both Error, not Exception) if the

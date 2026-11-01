@@ -196,6 +196,19 @@ neoForge {
             // syntax) since which module ModLauncher uses isn't being relied on further.
             jvmArgument("--add-opens=java.desktop/java.awt=ALL-UNNAMED,dncity")
 
+            // Unattended CPU profiling: `./gradlew runClient -Pdncity.quickPlay="New World" -Pdncity.jfr=<file.jfr>`
+            // opens that singleplayer world straight away and records a Java Flight Recording
+            // (`-Pdncity.jfrDelay`/`-Pdncity.jfrDuration`, default 150s/90s, so it starts after world load).
+            providers.gradleProperty("dncity.quickPlay").orNull?.let {
+                programArgument("--quickPlaySingleplayer")
+                programArgument(it)
+            }
+            providers.gradleProperty("dncity.jfr").orNull?.let {
+                val delay = providers.gradleProperty("dncity.jfrDelay").orNull ?: "150s"
+                val duration = providers.gradleProperty("dncity.jfrDuration").orNull ?: "90s"
+                jvmArgument("-XX:StartFlightRecording=delay=$delay,duration=$duration,settings=profile,filename=$it")
+            }
+
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty("neoforge.enabledGameTestNamespaces", mod_id)
         }

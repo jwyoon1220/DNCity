@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicInteger
  * popping in late, the viewer's eye is also tried a step to either side and a jump up ([FarEntityMath.peekEyes]) against
  * the target's head, chest and feet, and a player that was visible stays sent for [VISIBLE_GRACE_NANOS].
  *
- * Fails closed: a pair is not sent until a check has said "visible", and without DH on the server (or before DH has
- * loaded the dimension) nothing is sent at all. `-Ddncity.farEntities.serverOcclusion=false` turns the check off (every
- * far player in the radius is sent, as before), e.g. for a server that does not run DH.
+ * Fails open (user, 2026-10-28: far players must show up over LOD terrain): a pair is hidden only while a check has
+ * positively found every line blocked. Before the first answer, without DH on the server, before DH has loaded the
+ * dimension, or when a lookup throws, the player is sent. `-Ddncity.farEntities.serverOcclusion=false` turns the check off.
  */
 object FarEntityVisibility {
     val enabled: Boolean = System.getProperty("dncity.farEntities.serverOcclusion", "true") != "false"
@@ -37,7 +37,8 @@ object FarEntityVisibility {
 
     /** One (viewer, target) pair. Created and read on the server thread, answered by the check thread. */
     class PairState {
-        @Volatile var visibleUntilNanos = 0L
+        /** Starts visible: nothing has proved the line blocked yet. */
+        @Volatile var visibleUntilNanos = Long.MAX_VALUE
         @Volatile var pending = false
         var nextCheckNanos = 0L
     }
@@ -68,8 +69,7 @@ object FarEntityVisibility {
             if (!warnedNoDh) {
                 warnedNoDh = true
                 Dncity.LOGGER.warn(
-                    "DNCity: Distant Horizons is not on this server, so far players cannot be checked for line of sight and are " +
-                        "not sent. Install DH on the server or start it with -Ddncity.farEntities.serverOcclusion=false.",
+                    "DNCity: Distant Horizons is not on this server, so far players are sent without a line-of-sight check.",
                 )
             }
             return
@@ -81,13 +81,18 @@ object FarEntityVisibility {
         executor.execute {
             val visible = try {
                 val columns = ServerTerrain.terrain.columns(dimension)
-                // no DH world for this dimension (yet): nothing proves the line is clear, so do not send
-                columns != null && FarEntityMath.isVisibleFromAny(eyes, targets, START_DISTANCE, END_MARGIN, columns)
+                // no DH world for this dimension (yet): nothing proves the line is blocked, so send
+                columns == null || FarEntityMath.isVisibleFromAny(eyes, targets, START_DISTANCE, END_MARGIN, columns)
             } catch (e: Throwable) {
                 Dncity.LOGGER.debug("DNCity: far-entity visibility check failed", e)
-                false
+                true
             }
-            if (visible) pair.visibleUntilNanos = System.nanoTime() + VISIBLE_GRACE_NANOS
+            if (visible) {
+                pair.visibleUntilNanos = System.nanoTime() + VISIBLE_GRACE_NANOS
+            } else if (pair.visibleUntilNanos == Long.MAX_VALUE) {
+                // the first answer, and it is "blocked": end the before-any-answer state
+                pair.visibleUntilNanos = 0L
+            }
             pair.pending = false
         }
     }

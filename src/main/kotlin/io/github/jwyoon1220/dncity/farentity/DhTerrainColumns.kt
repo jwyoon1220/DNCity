@@ -2,7 +2,9 @@
 package io.github.jwyoon1220.dncity.farentity
 
 import com.seibel.distanthorizons.api.DhApi
+import com.seibel.distanthorizons.api.enums.rendering.EDhApiBlockMaterial
 import com.seibel.distanthorizons.api.enums.worldGeneration.EDhApiLevelType
+import com.seibel.distanthorizons.api.interfaces.block.IDhApiBlockStateWrapper
 import com.seibel.distanthorizons.api.interfaces.data.IDhApiTerrainDataCache
 import com.seibel.distanthorizons.api.interfaces.world.IDhApiLevelWrapper
 
@@ -40,8 +42,7 @@ class DhTerrainColumns(private val preferredLevelType: EDhApiLevelType) {
                 val spans = ArrayList<Int>()
                 for (point in points) {
                     val state = point?.blockStateWrapper ?: continue
-                    // water and lava are drawn translucent by DH; you see a swimmer's head over them
-                    if (state.isAir || state.isLiquid) continue
+                    if (!blocksSight(state)) continue
                     spans += point.bottomYBlockPos
                     spans += point.topYBlockPos
                 }
@@ -57,10 +58,31 @@ class DhTerrainColumns(private val preferredLevelType: EDhApiLevelType) {
         cacheDimension = null
     }
 
+    /**
+     * Only what a player really cannot see through. Water and lava are drawn translucent by DH (a swimmer's head shows over
+     * them); grass, flowers, snow-less plants, torches and the like have no collision shape (`isSolid` is DH's "collision
+     * shape not empty") and used to count as a full block, so a line skimming any meadow was "blocked"; leaves and glass
+     * are see-through in game.
+     */
+    private fun blocksSight(state: IDhApiBlockStateWrapper): Boolean {
+        if (state.isAir || state.isLiquid || !state.isSolid) return false
+        if (state.materialId == EDhApiBlockMaterial.LEAVES.index) return false
+        val id = state.serialString
+        return !seeThroughCache.getOrPut(id) { SEE_THROUGH.any(id::contains) }
+    }
+
+    /** Only touched from the one background thread that runs the column lookups. */
+    private val seeThroughCache = HashMap<String, Boolean>()
+
     private fun findLevel(dimension: String): IDhApiLevelWrapper? {
         val world = DhApi.Delayed.worldProxy ?: return null
         if (!world.worldLoaded()) return null
         val candidates = world.allLoadedLevelWrappers.filter { it.dimensionName == dimension }
         return candidates.firstOrNull { it.levelType == preferredLevelType } ?: candidates.firstOrNull()
+    }
+
+    private companion object {
+        /** Block-id fragments of see-through blocks that still have a collision shape. */
+        val SEE_THROUGH = listOf("glass", "fence", "iron_bars", "chain", "scaffolding", "trapdoor")
     }
 }

@@ -80,8 +80,8 @@ object FarEntityClient {
         var player: RemotePlayer? = null
         var vehicle: Entity? = null
 
-        /** Hidden until the first occlusion answer, so a proxy behind a hill never flashes into view. */
-        @Volatile var occluded = true
+        /** Drawn until an occlusion answer says every line is blocked (the server already sent only visible players). */
+        @Volatile var occluded = false
         @Volatile var occlusionPending = false
         var nextOcclusionNanos = 0L
 

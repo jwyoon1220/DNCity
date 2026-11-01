@@ -59,6 +59,11 @@
                   <project path="$PROJECT_DIR$/engine/kcp" />
                 </projects>
               </build>
+              <build path="$PROJECT_DIR$/engine/launcher" name="launcher">
+                <projects>
+                  <project path="$PROJECT_DIR$/engine/launcher" />
+                </projects>
+              </build>
               <build path="$PROJECT_DIR$/mods/lithium" name="lithium">
                 <projects>
                   <project path="$PROJECT_DIR$/mods/lithium" />
@@ -131,6 +136,7 @@
             <option value="$PROJECT_DIR$/engine/browserhost" />
             <option value="$PROJECT_DIR$/engine/fmod" />
             <option value="$PROJECT_DIR$/engine/kcp" />
+            <option value="$PROJECT_DIR$/engine/launcher" />
             <option value="$PROJECT_DIR$/engine/window" />
             <option value="$PROJECT_DIR$/mods/Automobility" />
             <option value="$PROJECT_DIR$/mods/Automobility/neoforge" />
