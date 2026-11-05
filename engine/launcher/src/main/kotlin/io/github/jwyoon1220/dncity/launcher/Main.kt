@@ -16,6 +16,9 @@ private object ConsoleProgress : Progress {
     override fun log(line: String) = println(line)
 }
 
+/** Offline name for the `--install`/`--run` debug CLI only; the window itself requires a Microsoft login. */
+private const val DEBUG_USER = "DevPlayer"
+
 fun main(args: Array<String>) {
     if ("--install" in args) {
         // Installs (and does not start) the configured game; exit code 0 on success.
@@ -26,7 +29,7 @@ fun main(args: Array<String>) {
             val id = Installer(paths, settings.resolvedJava(), ConsoleProgress)
                 .installAll(settings.minecraftVersion, settings.neoForgeVersion)
             println("설치 완료: $id")
-            println(GameLauncher(paths, settings).buildCommand(id, Session.offline(settings.username)).joinToString(" "))
+            println(GameLauncher(paths, settings).buildCommand(id, Session.offline(DEBUG_USER)).joinToString(" "))
         } catch (e: Exception) {
             e.printStackTrace()
             System.exit(1)
@@ -42,7 +45,7 @@ fun main(args: Array<String>) {
         val id = Installer(paths, settings.resolvedJava(), ConsoleProgress)
             .installAll(settings.minecraftVersion, settings.neoForgeVersion)
         Installer(paths, settings.resolvedJava(), ConsoleProgress).syncBundledMods()
-        val proc = GameLauncher(paths, settings).start(id, Session.offline(settings.username))
+        val proc = GameLauncher(paths, settings).start(id, Session.offline(DEBUG_USER))
         proc.inputStream.bufferedReader().forEachLine { println(it) }
         System.exit(proc.waitFor())
     }

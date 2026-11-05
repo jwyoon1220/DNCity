@@ -11,7 +11,6 @@ import io.github.jwyoon1220.dncity.launcher.Progress
 import io.github.jwyoon1220.dncity.launcher.Session
 import io.github.jwyoon1220.dncity.launcher.Settings
 import java.awt.BorderLayout
-import java.awt.CardLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
@@ -23,12 +22,11 @@ import java.awt.Insets
 import java.nio.file.Path
 import javax.swing.BorderFactory
 import javax.swing.JFrame
+import javax.swing.JLabel
 import javax.swing.JOptionPane
 import javax.swing.JPanel
 import javax.swing.JScrollPane
-import javax.swing.JSlider
 import javax.swing.JTextArea
-import javax.swing.JTextField
 import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 
@@ -36,12 +34,11 @@ import javax.swing.WindowConstants
 class LauncherFrame(private val root: Path) : JFrame("DNCity") {
 
     private val settings = Settings.load(root)
-    private val name = JTextField(settings.username).styled()
-    private val ram = JSlider(2, 16, (settings.ramMb / 1024).coerceIn(2, 16)).apply {
-        isOpaque = false
-        majorTickSpacing = 2
-        paintTicks = true
-    }
+    private val ram = FlatSlider(2, 16, (settings.ramMb / 1024).coerceIn(2, 16))
+    private val avatar = Avatar()
+    private val accountSub = label("", muted = true, size = 12f)
+    private val logScroll = JScrollPane()
+    private val logButton = FlatButton("로그")
     private val ramLabel = label("", muted = true)
     private val status = label("준비됨", muted = true)
     private val progressBar = FlatProgress()
@@ -57,10 +54,8 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
     private val settingsButton = FlatButton("설정")
     private val versionLine = label("", muted = true)
     private var stored: StoredAccount? = StoredAccount.load(root)
-    private val accountLabel = label("", size = 14f, style = Font.BOLD)
-    private val accountCards = CardLayout()
-    private val accountPanel = JPanel(accountCards).apply { isOpaque = false }
-    private val accountButton = FlatButton("Microsoft 로그인").apply { preferredSize = Dimension(150, 34) }
+    private val accountLabel = label("", size = 16f, style = Font.BOLD)
+    private val accountButton = FlatButton("Microsoft 로그인").apply { preferredSize = Dimension(130, 36) }
     private var busy = false
 
     private val progress = object : Progress {
@@ -89,13 +84,18 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
                 val g2 = Theme.smooth(g)
                 g2.paint = GradientPaint(0f, 0f, Theme.bgTop, 0f, height.toFloat(), Theme.bgBottom)
                 g2.fillRect(0, 0, width, height)
+                g2.paint = java.awt.RadialGradientPaint(
+                    width * 0.12f, height * 1.05f, width * 0.75f, floatArrayOf(0f, 1f),
+                    arrayOf(Color(0x5B, 0x8D, 0xEF, 90), Color(0x5B, 0x8D, 0xEF, 0)),
+                )
+                g2.fillRect(0, 0, width, height)
                 g2.dispose()
             }
         }
         add(buildBrand(), BorderLayout.WEST)
         add(buildMain(), BorderLayout.CENTER)
 
-        ram.addChangeListener { ramLabel.text = "${ram.value} GB" }
+        ram.onChange { ramLabel.text = "${ram.value} GB" }
         ramLabel.text = "${ram.value} GB"
         play.addActionListener { play() }
         accountButton.addActionListener { if (stored == null) microsoftLogin() else logout() }
@@ -107,7 +107,7 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
             }
         }
 
-        size = Dimension(920, 580)
+        size = Dimension(900, 500)
         minimumSize = size
         setLocationRelativeTo(null)
     }
@@ -118,88 +118,92 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
 
     private fun buildBrand(): JPanel = JPanel(GridBagLayout()).apply {
         isOpaque = false
-        preferredSize = Dimension(300, 0)
-        border = BorderFactory.createEmptyBorder(0, 34, 0, 10)
+        preferredSize = Dimension(320, 0)
+        border = BorderFactory.createEmptyBorder(40, 40, 36, 10)
         val c = GridBagConstraints().apply { gridx = 0; anchor = GridBagConstraints.WEST; weightx = 1.0 }
-        add(label("DNCity", size = 46f, style = Font.BOLD).apply { foreground = Color.WHITE }, c.apply { gridy = 0 })
-        add(label("서버 전용 런처", muted = true, size = 14f), c.apply { gridy = 1; insets = Insets(2, 4, 18, 0) })
+        add(JLabel(javax.swing.ImageIcon(Theme.icon(56))), c.apply { gridy = 0; insets = Insets(0, 0, 18, 0) })
+        add(label("DNCity", size = 40f, style = Font.BOLD).apply { foreground = Color.WHITE }, c.apply { gridy = 1; insets = Insets(0, 0, 0, 0) })
+        add(label("서버 전용 런처", muted = true, size = 14f), c.apply { gridy = 2; insets = Insets(2, 2, 0, 0) })
+        add(javax.swing.Box.createVerticalGlue(), GridBagConstraints().apply { gridx = 0; gridy = 3; weighty = 1.0 })
         refreshBrand()
-        add(versionLine, c.apply { gridy = 2; insets = Insets(0, 4, 0, 0) })
+        add(versionLine, c.apply { gridy = 4; insets = Insets(0, 2, 0, 0); anchor = GridBagConstraints.SOUTHWEST })
     }
 
     private fun buildMain(): JPanel {
-        val card = JPanel(GridBagLayout()).apply {
-            background = Theme.panel
-            border = BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Theme.panelLine),
-                BorderFactory.createEmptyBorder(18, 20, 18, 20),
-            )
+        val account = RoundPanel(GridBagLayout()).apply {
+            border = BorderFactory.createEmptyBorder(16, 18, 16, 18)
+            add(avatar, GridBagConstraints().apply { gridx = 0; gridy = 0; gridheight = 2; insets = Insets(0, 0, 0, 14) })
+            add(accountLabel, GridBagConstraints().apply { gridx = 1; gridy = 0; weightx = 1.0; anchor = GridBagConstraints.SOUTHWEST })
+            add(accountSub, GridBagConstraints().apply { gridx = 1; gridy = 1; weightx = 1.0; anchor = GridBagConstraints.NORTHWEST })
+            add(accountButton, GridBagConstraints().apply { gridx = 2; gridy = 0; gridheight = 2 })
         }
-        val full = { y: Int, top: Int ->
-            GridBagConstraints().apply {
-                gridx = 0; gridy = y; gridwidth = 2; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL
-                insets = Insets(top, 0, 0, 0)
-            }
+        val memory = RoundPanel(GridBagLayout()).apply {
+            border = BorderFactory.createEmptyBorder(16, 18, 14, 18)
+            add(label("메모리", size = 14f, style = Font.BOLD), GridBagConstraints().apply { gridx = 0; gridy = 0; weightx = 1.0; anchor = GridBagConstraints.WEST })
+            add(ramLabel.apply { foreground = Theme.accentHover; font = Theme.font(Font.BOLD, 14f) }, GridBagConstraints().apply { gridx = 1; gridy = 0; anchor = GridBagConstraints.EAST })
+            add(ram, GridBagConstraints().apply { gridx = 0; gridy = 1; gridwidth = 2; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL; insets = Insets(8, 0, 0, 0) })
         }
-        card.add(label("계정", muted = true, size = 12f), full(0, 0))
-        accountPanel.add(name, "offline")
-        accountPanel.add(JPanel(BorderLayout()).apply {
-            isOpaque = false
-            border = BorderFactory.createEmptyBorder(0, 2, 0, 0)
-            add(accountLabel, BorderLayout.WEST)
-        }, "online")
-        card.add(accountPanel, GridBagConstraints().apply {
-            gridx = 0; gridy = 1; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL; insets = Insets(6, 0, 0, 10)
-        })
-        card.add(accountButton, GridBagConstraints().apply { gridx = 1; gridy = 1; insets = Insets(6, 0, 0, 0) })
-        card.add(label("메모리", muted = true, size = 12f), GridBagConstraints().apply {
-            gridx = 0; gridy = 2; anchor = GridBagConstraints.WEST; insets = Insets(16, 0, 0, 0)
-        })
-        card.add(ramLabel, GridBagConstraints().apply {
-            gridx = 1; gridy = 2; anchor = GridBagConstraints.EAST; insets = Insets(16, 0, 0, 0)
-        })
-        card.add(ram, full(3, 4))
-        card.add(JScrollPane(log).apply {
+        logScroll.apply {
+            setViewportView(log)
             border = BorderFactory.createLineBorder(Theme.panelLine)
-            background = Theme.field
             viewport.background = Theme.field
-        }, GridBagConstraints().apply {
-            gridx = 0; gridy = 4; gridwidth = 2; weightx = 1.0; weighty = 1.0
-            fill = GridBagConstraints.BOTH; insets = Insets(16, 0, 0, 0)
-        })
+            preferredSize = Dimension(100, 170)
+            isVisible = false
+        }
+        logButton.addActionListener { showLog(!logScroll.isVisible) }
 
         val bottom = JPanel(GridBagLayout()).apply {
             isOpaque = false
-            border = BorderFactory.createEmptyBorder(14, 0, 0, 0)
-            add(status, GridBagConstraints().apply { gridx = 0; gridy = 0; weightx = 1.0; anchor = GridBagConstraints.WEST })
             add(progressBar, GridBagConstraints().apply {
-                gridx = 0; gridy = 1; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL; insets = Insets(6, 0, 0, 14)
+                gridx = 0; gridy = 0; gridwidth = 4; weightx = 1.0; fill = GridBagConstraints.HORIZONTAL; insets = Insets(0, 0, 12, 0)
             })
-            add(settingsButton, GridBagConstraints().apply {
-                gridx = 1; gridy = 0; gridheight = 2; insets = Insets(0, 0, 0, 10)
-            })
-            add(play, GridBagConstraints().apply { gridx = 2; gridy = 0; gridheight = 2 })
+            add(status, GridBagConstraints().apply { gridx = 0; gridy = 1; weightx = 1.0; anchor = GridBagConstraints.WEST })
+            add(logButton, GridBagConstraints().apply { gridx = 1; gridy = 1; insets = Insets(0, 0, 0, 8) })
+            add(settingsButton, GridBagConstraints().apply { gridx = 2; gridy = 1; insets = Insets(0, 0, 0, 8) })
+            add(play, GridBagConstraints().apply { gridx = 3; gridy = 1 })
         }
 
+        val stack = JPanel(GridBagLayout()).apply {
+            isOpaque = false
+            val one = { y: Int, top: Int, fill: Int, wy: Double ->
+                GridBagConstraints().apply { gridx = 0; gridy = y; weightx = 1.0; weighty = wy; this.fill = fill; insets = Insets(top, 0, 0, 0) }
+            }
+            add(account, one(0, 0, GridBagConstraints.HORIZONTAL, 0.0))
+            add(memory, one(1, 12, GridBagConstraints.HORIZONTAL, 0.0))
+            add(logScroll, one(2, 12, GridBagConstraints.BOTH, 0.0))
+            add(javax.swing.Box.createVerticalGlue(), one(3, 0, GridBagConstraints.VERTICAL, 1.0))
+        }
         return JPanel(BorderLayout()).apply {
             isOpaque = false
-            border = BorderFactory.createEmptyBorder(28, 0, 28, 34)
-            add(card, BorderLayout.CENTER)
+            border = BorderFactory.createEmptyBorder(32, 0, 28, 36)
+            add(stack, BorderLayout.CENTER)
             add(bottom, BorderLayout.SOUTH)
         }
+    }
+
+    /** The log is hidden until needed; showing it grows/shrinks the window by its height. */
+    private fun showLog(show: Boolean) {
+        if (logScroll.isVisible == show) return
+        logScroll.isVisible = show
+        logButton.text = if (show) "로그 숨기기" else "로그"
+        val delta = logScroll.preferredSize.height + 12
+        setSize(width, if (show) height + delta else height - delta)
+        revalidate()
     }
 
     private fun refreshAccount() {
         val acc = stored
         if (acc == null) {
-            accountCards.show(accountPanel, "offline")
+            accountLabel.text = "로그인 필요"
+            accountSub.text = "Microsoft 계정으로 로그인해야 플레이할 수 있습니다"
+            avatar.letter = "?"
             accountButton.text = "Microsoft 로그인"
         } else {
-            accountLabel.text = "${acc.username}  ·  Microsoft"
-            accountCards.show(accountPanel, "online")
+            accountLabel.text = acc.username
+            accountSub.text = "Microsoft 계정"
+            avatar.letter = acc.username.take(1).uppercase()
             accountButton.text = "로그아웃"
         }
-        name.isEnabled = !busy && acc == null
     }
 
     private fun logout() {
@@ -239,6 +243,7 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
                 stored = StoredAccount.load(root)
                 progress.status("로그인되었습니다: ${stored?.username}")
             } catch (e: Exception) {
+                SwingUtilities.invokeLater { showLog(true) }
                 progress.status("로그인 실패: ${e.message}")
                 progress.log(e.stackTraceToString())
             } finally {
@@ -258,7 +263,6 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
     }
 
     private fun saveSettings() {
-        settings.username = name.text.trim().ifEmpty { settings.username }
         settings.ramMb = ram.value * 1024
         runCatching { settings.save(root) }
     }
@@ -267,15 +271,15 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
         busy = value
         play.isEnabled = !value
         settingsButton.isEnabled = !value
-        name.isEnabled = !value && stored == null
         accountButton.isEnabled = !value
         ram.isEnabled = !value
     }
 
     private fun play() {
-        val user = name.text.trim()
-        if (stored == null && !Regex("[A-Za-z0-9_]{3,16}").matches(user)) {
-            JOptionPane.showMessageDialog(this, "닉네임은 영문/숫자/_ 3~16자여야 합니다.", "DNCity", JOptionPane.WARNING_MESSAGE)
+        val account = stored
+        if (account == null) {
+            status.text = "먼저 Microsoft 로그인을 해주세요"
+            JOptionPane.showMessageDialog(this, "플레이하려면 Microsoft 계정으로 로그인해야 합니다.", "DNCity", JOptionPane.INFORMATION_MESSAGE)
             return
         }
         saveSettings()
@@ -289,17 +293,11 @@ class LauncherFrame(private val root: Path) : JFrame("DNCity") {
                 val installer = Installer(paths, settings.resolvedJava(), progress)
                 val id = installer.installAll(settings.minecraftVersion, settings.neoForgeVersion)
                 installer.syncBundledMods()
-                installer.syncPack(settings.packUrl)
 
                 progress.status("게임 실행 중")
                 progress.fraction(1.0)
-                val account = stored
-                val session = if (account != null) {
-                    progress.status("Microsoft 로그인 확인 중")
-                    MicrosoftAuth(settings.resolvedClientId()).silentLogin(root, account)
-                } else {
-                    Session.offline(user)
-                }
+                progress.status("Microsoft 로그인 확인 중")
+                val session = MicrosoftAuth(settings.resolvedClientId()).silentLogin(root, account)
                 val proc = GameLauncher(paths, settings).start(id, session)
                 proc.inputStream.bufferedReader().forEachLine { progress.log(it) }
                 val code = proc.waitFor()

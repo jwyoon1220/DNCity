@@ -134,6 +134,16 @@ class PhoneFragment : Fragment(), ScreenCallback {
             // Replaces the phone screen with VoxelMap's own fullscreen world map -- VoxelMap is
             // bundled as a required companion mod (see settings.gradle.kts/build.gradle.kts's
             // VoxelMap entries), not an optional one, so calling its class directly is safe.
+            // Closes the phone (frees its NanoVG surface), then asks the server for the market: the snapshot that comes
+            // back opens ShopFragment (see client.shop.ShopClient)
+            PhoneAction.OpenShop -> Minecraft.getInstance().execute {
+                PhoneController.close()
+                Minecraft.getInstance().player?.connection?.sendCommand("shop")
+            }
+            PhoneAction.OpenAmmoShop -> Minecraft.getInstance().execute {
+                PhoneController.close()
+                Minecraft.getInstance().player?.connection?.sendCommand("ammoshop")
+            }
             PhoneAction.OpenMap -> Minecraft.getInstance().execute {
                 Minecraft.getInstance().setScreen(GuiPersistentMap(null))
             }

@@ -7,29 +7,24 @@ import java.util.UUID
 
 /** Persisted launcher settings (`<root>/launcher.json`). Every field has a default, so Gson can fill gaps. */
 class Settings {
-    var username: String = "Player"
     var ramMb: Int = 4096
 
     /** Blank = the runtime bundled with the launcher. */
     var javaPath: String = ""
     var extraJvmArgs: String = ""
-    var minecraftVersion: String = "1.21.1"
-
-    /** Same NeoForge the mod itself is built against (gradle.properties `neo_version`). */
-    var neoForgeVersion: String = "21.1.248"
-
-    /** Optional pack manifest URL: `{"mods":[{"name":"x.jar","url":"...","sha1":"..."}]}` synced into mods/. */
-    var packUrl: String = ""
 
     /** Blank = `<root>/game`. */
     var gameDir: String = ""
 
-    /** Azure app (client) id for Microsoft login; blank falls back to `-Ddncity.msClientId` / env DNCITY_MS_CLIENT_ID. */
-    var msClientId: String = ""
+    // DNCity-only launcher: game versions and the login app are fixed, not user settings.
+    val minecraftVersion: String get() = MINECRAFT_VERSION
 
-    fun resolvedClientId(): String = msClientId.ifBlank {
-        System.getProperty("dncity.msClientId") ?: System.getenv("DNCITY_MS_CLIENT_ID") ?: DEFAULT_CLIENT_ID
-    }.trim()
+    /** Same NeoForge the mod itself is built against (gradle.properties `neo_version`). */
+    val neoForgeVersion: String get() = NEOFORGE_VERSION
+
+    /** Developer override only: `-Ddncity.msClientId` / env DNCITY_MS_CLIENT_ID. */
+    fun resolvedClientId(): String =
+        (System.getProperty("dncity.msClientId") ?: System.getenv("DNCITY_MS_CLIENT_ID") ?: DEFAULT_CLIENT_ID).trim()
 
     fun resolvedGameDir(root: Path): Path = if (gameDir.isBlank()) root.resolve("game") else Path.of(gameDir)
     fun resolvedJava(): String = javaPath.ifBlank { Platform.bundledJava() }
@@ -40,13 +35,16 @@ class Settings {
     }
 
     companion object {
+        const val MINECRAFT_VERSION = "1.21.1"
+        const val NEOFORGE_VERSION = "21.1.248"
+
         /**
-         * What CmlLib.Core.Auth.Microsoft uses by default (`XboxGameTitles.MinecraftJava`): the official Minecraft Java
-         * launcher's id, already accepted by Mojang's API. It is not DNCity's own, so Mojang may block it at any time.
-         * DNCity's own Azure app ("Parin", `5ac81d8f-ef78-47ca-827b-78335e5e035c`) can replace it in the settings once
-         * Mojang approves it (https://aka.ms/mce-reviewappid).
+         * DNCity's own Azure app ("Parin", tenant `0c6eedd0-d804-4cda-b2b7-0f01a3fb966b`, personal Microsoft accounts).
+         * Mojang's `login_with_xbox` answers 403 until the app id is approved (https://aka.ms/mce-reviewappid).
+         * The previous default was CmlLib.Core's `XboxGameTitles.MinecraftJava` id `00000000402b5328` (the official
+         * launcher's id, not DNCity's); it still works when entered in the settings.
          */
-        const val DEFAULT_CLIENT_ID = "00000000402b5328"
+        const val DEFAULT_CLIENT_ID = "5ac81d8f-ef78-47ca-827b-78335e5e035c"
 
         private fun file(root: Path) = root.resolve("launcher.json")
 

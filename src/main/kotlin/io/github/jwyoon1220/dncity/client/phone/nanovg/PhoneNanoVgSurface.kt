@@ -51,6 +51,9 @@ sealed class PhoneAction {
     object SendMessage : PhoneAction()
     /** Opens VoxelMap's fullscreen world map screen directly, replacing the phone screen -- see [io.github.jwyoon1220.dncity.client.phone.PhoneFragment.handleAction]. */
     object OpenMap : PhoneAction()
+    /** Closes the phone and opens the market UI (asks the server through `/shop`, see PhoneFragment.handleAction). */
+    object OpenShop : PhoneAction()
+    object OpenAmmoShop : PhoneAction()
 }
 
 private data class HitRect(val x: Float, val y: Float, val w: Float, val h: Float, val action: PhoneAction) {
@@ -439,6 +442,12 @@ object PhoneNanoVgSurface {
         y += 60f
         drawWideButton(col, x, y, w, 48f, "지도", primary = true)
         hits += HitRect(x, y, w, 48f, PhoneAction.OpenMap)
+        y += 60f
+        drawWideButton(col, x, y, w, 48f, "상점", primary = true)
+        hits += HitRect(x, y, w, 48f, PhoneAction.OpenShop)
+        y += 60f
+        drawWideButton(col, x, y, w, 48f, "탄약 상점", primary = true)
+        hits += HitRect(x, y, w, 48f, PhoneAction.OpenAmmoShop)
     }
 
     private fun drawDialerPage(col: NVGColor, hits: MutableList<HitRect>, screenW: Float) {
