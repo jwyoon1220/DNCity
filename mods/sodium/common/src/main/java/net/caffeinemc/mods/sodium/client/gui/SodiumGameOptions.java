@@ -46,6 +46,7 @@ public class SodiumGameOptions {
         public boolean animateOnlyVisibleTextures = true;
         public boolean useEntityCulling = true;
         public boolean useFogOcclusion = true;
+        public boolean useGpuOcclusionCulling = true;
         public boolean useBlockFaceCulling = true;
         public boolean useNoErrorGLContext = true;
     }

@@ -145,6 +145,7 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         RenderDevice.enterManagedCode();
 
         try {
+            this.renderer.setCullingClipMatrix(((ViewportProvider) frustum).sodium$getClipMatrix());
             this.renderer.setupTerrain(camera, viewport, spectator, updateChunksImmediately);
         } finally {
             RenderDevice.exitManagedCode();

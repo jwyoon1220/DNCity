@@ -56,6 +56,13 @@ public class LodBufferContainer implements AutoCloseable
 	
 	public boolean buffersUploaded = false;
 	
+	/**
+	 * DNCity: vertex Y range of the uploaded buffers relative to {@link #minCornerBlockPos}, see
+	 * {@link LodQuadBuilder#computeVertexYRange()}; {@link Long#MIN_VALUE} until the first upload (or when empty).
+	 * Written on the render thread when the upload finishes, read there by occlusion culling.
+	 */
+	public long vertexYRange = Long.MIN_VALUE;
+	
 	public GLVertexBuffer[] vbos;
 	public GLVertexBuffer[] vbosTransparent;
 	
@@ -101,6 +108,7 @@ public class LodBufferContainer implements AutoCloseable
 		// make the buffers
 		ArrayList<ByteBuffer> opaqueBuffers = builder.makeOpaqueVertexBuffers();
 		ArrayList<ByteBuffer> transparentBuffers = builder.makeTransparentVertexBuffers();
+		final long newVertexYRange = builder.computeVertexYRange();
 		
 		this.vbos = resizeBuffer(this.vbos, opaqueBuffers.size());
 		this.vbosTransparent = resizeBuffer(this.vbosTransparent, transparentBuffers.size());
@@ -123,6 +131,7 @@ public class LodBufferContainer implements AutoCloseable
 				// upload on the render thread
 				uploadBuffersDirect(this.vbos, opaqueBuffers, gpuUploadMethod);
 				uploadBuffersDirect(this.vbosTransparent, transparentBuffers, gpuUploadMethod);
+				this.vertexYRange = newVertexYRange;
 				this.buffersUploaded = true;
 				
 				// success

@@ -1,0 +1,4 @@
+{
+  "sodium.options.use_gpu_occlusion_culling.name": "GPU 오클루전 컬링 사용",
+  "sodium.options.use_gpu_occlusion_culling.tooltip": "켜면 매 프레임 GPU가 지형 깊이를 작은 이미지로 줄이고, 몇 프레임 뒤 CPU가 기다리지 않고 읽어 옵니다(Dagor 엔진의 Hi-Z 오클루전과 같은 방식). 가까운 지형에 가려진 청크, 엔티티, Distant Horizons 지형을 건너뛰어 주로 CPU 시간을 줄입니다. 막 보이기 시작한 것이 몇 프레임 늦게 나타날 수 있습니다."
+}

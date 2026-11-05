@@ -25,8 +25,17 @@ public class FrustumMixin implements ViewportProvider {
     @Final
     private FrustumIntersection intersection;
 
+    @Shadow
+    @Final
+    private org.joml.Matrix4f matrix;
+
     @Override
     public Viewport sodium$createViewport() {
         return new Viewport(new SimpleFrustum(this.intersection), new Vector3d(this.camX, this.camY, this.camZ));
+    }
+
+    @Override
+    public org.joml.Matrix4fc sodium$getClipMatrix() {
+        return this.matrix;
     }
 }

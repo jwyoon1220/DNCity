@@ -820,6 +820,23 @@ public class Config
 									+ "Disable this if you see terrain incorrectly popping in/out.")
 							.build();
 
+					// DNCity: CPU-cheap replacement for enableOcclusionCulling's hardware queries above when
+					// DNCity's Sodium fork is installed -- see SodiumHiZBridge's class doc. Default on: the
+					// occluders and the conservative direction of every approximation are the same as the
+					// hardware queries', but it costs no GL calls per section.
+					public static ConfigEntry<Boolean> useSodiumHiZOcclusion = new ConfigEntry.Builder<Boolean>()
+							.set(true)
+							.comment(""
+									+ "If true and Sodium's \"GPU Occlusion Culling\" is on, LOD sections \n"
+									+ "hidden behind nearby (vanilla) terrain are skipped using Sodium's \n"
+									+ "GPU-built, CPU-read Hi-Z depth buffer. Unlike the hardware occlusion \n"
+									+ "queries above it issues no GL calls per section, so it saves CPU time. \n"
+									+ "When active, the hardware queries are not used. \n"
+									+ "\n"
+									+ "Something that just came into view can appear a few frames late. \n"
+									+ "Ignored while the earth curvature effect is enabled.")
+							.build();
+					
 					public static ConfigEntry<String> ignoredRenderBlockCsv = new ConfigEntry.Builder<String>() // TODO accept wildcards
 							.set("minecraft:barrier,minecraft:structure_void,minecraft:light,minecraft:tripwire,minecraft:brown_mushroom")
 							.setAppearance(EConfigEntryAppearance.ONLY_IN_FILE) // only shown in file since the UI has a character limit

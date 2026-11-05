@@ -274,6 +274,42 @@ public class LodQuadBuilder
 	// buffer setup //
 	//==============//
 	
+	/**
+	 * DNCity: lowest and highest vertex Y (relative to the buffer's min corner, before the 0.01 block micro offset)
+	 * over every quad, packed as {@code (min << 32) | (max & 0xFFFFFFFFL)}, or {@link Long#MIN_VALUE} if empty.
+	 * Lets occlusion culling use the section's real height instead of its whole column.
+	 */
+	public long computeVertexYRange()
+	{
+		int minY = Integer.MAX_VALUE;
+		int maxY = Integer.MIN_VALUE;
+		for (ArrayList<BufferQuad>[] lists : new ArrayList[][] { this.opaqueQuads, this.transparentQuads })
+		{
+			for (ArrayList<BufferQuad> quadList : lists)
+			{
+				if (quadList == null)
+				{
+					continue;
+				}
+				
+				for (int i = 0; i < quadList.size(); i++)
+				{
+					BufferQuad quad = quadList.get(i);
+					int top = quad.y;
+					if (quad.direction.axis != EDhDirection.Axis.Y)
+					{
+						// side faces span widthNorthSouthOrUpDown upwards, see putQuad
+						top += quad.widthNorthSouthOrUpDown;
+					}
+					minY = Math.min(minY, quad.y);
+					maxY = Math.max(maxY, top);
+				}
+			}
+		}
+		
+		return (minY > maxY) ? Long.MIN_VALUE : (((long) minY) << 32) | (maxY & 0xFFFFFFFFL);
+	}
+	
 	public ArrayList<ByteBuffer> makeOpaqueVertexBuffers() { return this.makeVertexBuffers(this.opaqueQuads); }
 	public ArrayList<ByteBuffer> makeTransparentVertexBuffers() { return this.makeVertexBuffers(this.transparentQuads); }
 	private ArrayList<ByteBuffer> makeVertexBuffers(ArrayList<BufferQuad>[] quadList)

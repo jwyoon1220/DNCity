@@ -161,7 +161,14 @@ public class RenderBufferHandler implements AutoCloseable
 		// BoundingBoxOcclusionCuller's own doc comment for why (it tests against whatever's
 		// already in the depth buffer, which for the shadow pass would be the wrong depth/matrix
 		// entirely).
-		boolean enableOcclusionCulling = !isShadowPass && Config.Client.Advanced.Graphics.Culling.enableOcclusionCulling.get();
+		// DNCity: Sodium's GPU Hi-Z buffer (SodiumHiZBridge) replaces the hardware queries when available: same
+		// occluders, no GL calls per section. Curved terrain is drawn lower than its stored height, so the
+		// straight bounding boxes below would not hold it.
+		final boolean useSodiumHiZ = !isShadowPass
+				&& Config.Client.Advanced.Graphics.Culling.useSodiumHiZOcclusion.get()
+				&& Config.Client.Advanced.Graphics.Experimental.earthCurveRatio.get() == 0
+				&& com.seibel.distanthorizons.core.render.occlusion.SodiumHiZBridge.isReady();
+		boolean enableOcclusionCulling = !isShadowPass && !useSodiumHiZ && Config.Client.Advanced.Graphics.Culling.enableOcclusionCulling.get();
 		this.occlusionCuller.beginFrame();
 
 		// worldMinY/worldHeight/matWorldViewProjection are also used below by the occlusion cull
@@ -169,7 +176,7 @@ public class RenderBufferHandler implements AutoCloseable
 		int worldMinY = 0;
 		int worldHeight = 0;
 		Matrix4fc matWorldViewProjection = null;
-		if (enableFrustumCulling || enableOcclusionCulling)
+		if (enableFrustumCulling || enableOcclusionCulling || useSodiumHiZ)
 		{
 			worldMinY = renderParams.clientLevelWrapper.getMinHeight();
 			worldHeight = renderParams.clientLevelWrapper.getMaxHeight();
@@ -230,7 +237,7 @@ public class RenderBufferHandler implements AutoCloseable
 			
 			try
 			{
-				if (enableFrustumCulling || lambdaEnableOcclusionCulling)
+				if (enableFrustumCulling || lambdaEnableOcclusionCulling || useSodiumHiZ)
 				{
 					DhLodPos lodBounds = DhSectionPos.getSectionBBoxPos(renderSection.pos);
 					int blockMinX = lodBounds.getMinX().toBlockWidth();
@@ -251,6 +258,29 @@ public class RenderBufferHandler implements AutoCloseable
 						return true;
 					}
 
+					// DNCity: Sodium Hi-Z occlusion (SodiumHiZBridge); boxes use the section's real vertex
+					// height when its buffers know it (+-1 block for the micro offset), the whole column otherwise.
+					if (useSodiumHiZ)
+					{
+						double boxMinY = lambdaWorldMinY;
+						double boxMaxY = lambdaWorldMinY + lambdaWorldHeight;
+						LodBufferContainer container = renderSection.bufferContainer;
+						if (container != null && container.vertexYRange != Long.MIN_VALUE)
+						{
+							int baseY = container.minCornerBlockPos.getY();
+							boxMinY = baseY + (int) (container.vertexYRange >> 32) - 1;
+							boxMaxY = baseY + (int) container.vertexYRange + 1;
+						}
+						
+						if (com.seibel.distanthorizons.core.render.occlusion.SodiumHiZBridge.isBoxOccluded(
+								blockMinX, boxMinY, blockMinZ,
+								blockMinX + lodBlockWidth, boxMaxY, blockMinZ + lodBlockWidth))
+						{
+							this.culledBufferCount++;
+							return true;
+						}
+					}
+					
 					// DNCity: GPU occlusion culling, see BoundingBoxOcclusionCuller's doc comment.
 					// Only reached once the section has already passed frustum culling above.
 					if (lambdaEnableOcclusionCulling)

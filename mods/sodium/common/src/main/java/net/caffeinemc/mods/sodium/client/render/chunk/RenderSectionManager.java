@@ -38,6 +38,7 @@ import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.data.T
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
 import net.caffeinemc.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
 import net.caffeinemc.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
+import net.caffeinemc.mods.sodium.client.render.occlusion.HiZOcclusion;
 import net.caffeinemc.mods.sodium.client.render.util.RenderAsserts;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
@@ -99,6 +100,9 @@ public class RenderSectionManager {
     private @Nullable BlockPos cameraBlockPos;
     private @Nullable Vector3dc cameraPosition;
 
+    private final org.joml.Matrix4f cullingClipMatrix = new org.joml.Matrix4f();
+    private boolean hasCullingClipMatrix;
+
     public RenderSectionManager(ClientLevel level, int renderDistance, CommandList commandList) {
         this.chunkRenderer = new DefaultChunkRenderer(RenderDevice.INSTANCE, ChunkMeshFormats.COMPACT);
 
@@ -128,6 +132,15 @@ public class RenderSectionManager {
         this.cameraPosition = cameraPosition;
     }
 
+    /** Clip matrix of the frustum the next {@link #update} culls with, or null if unknown (no GPU Hi-Z then). */
+    public void setCullingClipMatrix(@Nullable org.joml.Matrix4fc clip) {
+        if (clip != null) {
+            this.cullingClipMatrix.set(clip);
+        }
+
+        this.hasCullingClipMatrix = clip != null;
+    }
+
     public void update(Camera camera, Viewport viewport, boolean spectator) {
         this.lastUpdatedFrame += 1;
 
@@ -144,7 +157,16 @@ public class RenderSectionManager {
 
         var visitor = new VisibleChunkCollector(frame);
 
-        this.occlusionCuller.findVisible(visitor, viewport, searchDistance, useOcclusionCulling, frame);
+        // GPU Hi-Z occlusion (Dagor-style): only with the real camera position, never the frustum's offset one, and
+        // never when graph occlusion is off (spectator inside a block: the depth buffer is not a view of the world)
+        var hiZ = HiZOcclusion.instance();
+        Vector3dc cameraPos = this.cameraPosition;
+        boolean useHiZ = useOcclusionCulling && this.hasCullingClipMatrix && cameraPos != null &&
+                hiZ.prepare(this.cullingClipMatrix, cameraPos.x(), cameraPos.y(), cameraPos.z());
+
+        hiZ.beginGraph();
+        this.occlusionCuller.findVisible(visitor, viewport, searchDistance, useOcclusionCulling, frame, useHiZ ? hiZ : null);
+        hiZ.endGraph(useHiZ);
 
         this.renderLists = visitor.createRenderLists(viewport);
         this.taskLists = visitor.getRebuildLists();
@@ -238,6 +260,7 @@ public class RenderSectionManager {
 
         // force update to remove section from render lists
         this.needsGraphUpdate = true;
+        HiZOcclusion.instance().onGeometryChanged();
     }
 
     public void renderLayer(ChunkRenderMatrices matrices, TerrainRenderPass pass, double x, double y, double z) {
@@ -303,7 +326,12 @@ public class RenderSectionManager {
         // (sort results never change the graph)
         // generally there's no sort results without a camera movement, which would also trigger
         // a graph update, but it can sometimes happen because of async task execution
-        this.needsGraphUpdate |= this.processChunkBuildResults(results);
+        boolean changed = this.processChunkBuildResults(results);
+        this.needsGraphUpdate |= changed;
+
+        if (changed) {
+            HiZOcclusion.instance().onGeometryChanged();
+        }
 
         for (var result : results) {
             result.destroy();
@@ -537,6 +565,8 @@ public class RenderSectionManager {
     }
 
     public void destroy() {
+        HiZOcclusion.instance().reset();
+
         this.builder.shutdown(); // stop all the workers, and cancel any tasks
 
         for (var result : this.collectChunkBuildResults()) {
@@ -698,6 +728,7 @@ public class RenderSectionManager {
 
         list.add(String.format("Geometry Pool: %d/%d MiB (%d buffers)", MathUtil.toMib(deviceUsed), MathUtil.toMib(deviceAllocated), count));
         list.add(String.format("Transfer Queue: %s", this.regions.getStagingBuffer().toString()));
+        list.add(HiZOcclusion.instance().getDebugString());
 
         list.add(String.format("Chunk Builder: Permits=%02d (E %03d) | Busy=%02d | Total=%02d",
                 this.builder.getScheduledJobCount(), this.builder.getScheduledEffort(), this.builder.getBusyThreadCount(), this.builder.getTotalThreadCount())

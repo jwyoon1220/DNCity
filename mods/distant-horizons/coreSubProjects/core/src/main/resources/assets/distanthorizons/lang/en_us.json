@@ -376,6 +376,10 @@
     "Disable Shadow Pass Frustum Culling",
   "distanthorizons.config.client.advanced.graphics.culling.disableShadowPassFrustumCulling.@tooltip":
     "Identical to the other frustum culling option except that it is \nonly used when a shader mod is present using the DH API \nand the shadow pass is being rendered. \n\nDisable this if shadows render incorrectly.",
+  "distanthorizons.config.client.advanced.graphics.culling.useSodiumHiZOcclusion":
+    "Use Sodium Hi-Z Occlusion",
+  "distanthorizons.config.client.advanced.graphics.culling.useSodiumHiZOcclusion.@tooltip":
+    "If true and Sodium's \"GPU Occlusion Culling\" is on, LOD sections \nhidden behind nearby terrain are skipped using Sodium's GPU-built Hi-Z \ndepth buffer. Unlike the hardware occlusion queries it needs no GL \ncalls per section, so it saves CPU time. \n\nSomething that just came into view can appear a few frames late.",
   "distanthorizons.config.client.advanced.graphics.culling.ignoredRenderBlockCsv":
     "Ignored Block CSV",
   "distanthorizons.config.client.advanced.graphics.culling.ignoredRenderBlockCsv.@tooltip":

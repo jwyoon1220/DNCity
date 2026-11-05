@@ -1167,6 +1167,43 @@ substitution; the root `build` task depends on its `assemble`.
 - Verified on Windows: full install into an empty dir and a NeoForge boot to the resource reload. The Swing window and
   the MSI were not looked at / built.
 
+## GPU Hi-Z occlusion in Sodium + DH (marker `sodium-gpu-hiz-occlusion`)
+
+User request 2026-11-05: make Sodium's renderer less CPU-bound, Dagor-Engine style, without breaking the Minecraft/Sodium
+APIs other mods use; only `mods/sodium` and `mods/distant-horizons` were to change (nothing under `src/`). Modelled on
+Dagor's occlusion system (read in GaijinEntertainment/DagorEngine: `prog/engine/lib3d/occlusionSystem.cpp`,
+`dag_occlusionRenderer.h` `reprojectHWDepthBuffer`, `prog/dagorInclude/math/dag_occlusionTest.h`,
+`prog/daNetGame/shaders/downsample_depth_hzb.dshl`): the GPU reduces depth to a 256x128 farthest-depth image, it is read
+back through a ring of 3 CPU-readable targets without waiting, reprojected into the current camera on the CPU, max-mipped
+(test mip <= 3) and boxes are tested against it.
+- **Sodium** (`client/render/occlusion/`): `GpuDepthCapture` (one full-screen pass over the depth attachment of the bound
+  framebuffer right after solid+cutout terrain in `SodiumWorldRenderer.drawChunkLayer`, R32F target, 3 PBOs + fences; GL
+  3.2 only; every GL state it touches is read and restored, through `GlStateManager` where Minecraft caches it; any GL
+  failure disables it for the session), `HiZBuffer` (pure JVM: reprojection with one combined matrix, 2x2 farthest-wins
+  splat, sky splats "open", +1 % depth slack, refuses a capture > 32 blocks away or with > 1/8 zero texels; box test from
+  the clip-space interval of the box), `HiZOcclusion` (frame driver). Differences from Dagor are all conservative (see
+  `HiZBuffer`'s class doc).
+- **Where it culls**: `OcclusionCuller` skips *and stops traversing* through an occluded section (the camera's section
+  and its 26 neighbours are never tested); `isEntityVisible` also rejects entities whose box is occluded. Never in Iris's
+  shadow pass (`IrisApi.isRenderingShadowPass`, by reflection), never with graph occlusion off (spectator in a block).
+  The culling matrix is vanilla `Frustum.matrix` (projection * modelView, verified in the 1.21.1 bytecode) via
+  `ViewportProvider.sodium$getClipMatrix()` (a *default* method so Iris's own `ViewportProvider` frustums still compile),
+  with the real camera position (the frustum's own one may be moved back by `offsetToFullyIncludeCameraCube`).
+- **Staleness**: a culled graph is re-searched when a capture taken after a section rebuild/removal arrives, and at least
+  every 8 frames while the camera is still. Something revealed can still appear 2-3 frames late (readback latency).
+- **Option**: Sodium Performance page, "Use GPU Occlusion Culling" (`performance.useGpuOcclusionCulling`, default on).
+  F3 shows `Hi-Z: on, sections culled/tested, entities N`.
+- **Distant Horizons**: `core/render/occlusion/SodiumHiZBridge` calls Sodium's `HiZOcclusion.isReadyPublic()` /
+  `isBoxOccludedPublic(6 doubles)` by reflection (that signature is the contract). `RenderBufferHandler.buildRenderList`
+  uses it instead of the per-section hardware queries of `BoundingBoxOcclusionCuller` (no GL calls per section) when
+  `Culling.useSodiumHiZOcclusion` (default true) and Sodium are on and earth curvature is off. Boxes use the section's real
+  vertex Y range (`LodQuadBuilder.computeVertexYRange`, stored as `LodBufferContainer.vertexYRange` on upload) +-1 block,
+  else the whole column. Occluders are vanilla terrain only (LODs behind nearer LODs are not culled, same as before).
+- **Verified**: Sodium compiles (`./gradlew -p mods/sodium :neoforge:compileJava`), DH core compiles (`./gradlew -p mods/distant-horizons :core:compileJava`); `HiZBuffer` was exercised by a
+  standalone harness (wall/half wall/pinhole/sky/zero/teleport/motion cases, ~0.4 ms per reprojection, ~0.2 us per box
+  test after warm-up; harness kept outside the repo). **Not yet run in a client**: the GL capture path, the culling
+  result on screen, Iris with a shader pack and DH have not been seen.
+
 ## Editing the mod metadata template
 
 `mod_authors`, `mod_description`, and version/range values live in `gradle.properties`, not in

@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.client.render.chunk.occlusion;
 
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import net.caffeinemc.mods.sodium.client.render.chunk.RenderSection;
+import net.caffeinemc.mods.sodium.client.render.occlusion.HiZOcclusion;
 import net.caffeinemc.mods.sodium.client.render.viewport.CameraTransform;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
 import net.caffeinemc.mods.sodium.client.util.collections.DoubleBufferedQueue;
@@ -29,13 +30,29 @@ public class OcclusionCuller {
                             boolean useOcclusionCulling,
                             int frame)
     {
+        this.findVisible(visitor, viewport, searchDistance, useOcclusionCulling, frame, null);
+    }
+
+    /**
+     * As {@link #findVisible(Visitor, Viewport, float, boolean, int)}, additionally skipping (and not traversing
+     * through) sections that {@code hiZ} reports hidden behind recent frames' terrain depth. Pruning the traversal
+     * is safe: a ray to anything visible only passes through sections that are themselves not occluded along it, and
+     * those form an outward path the search still follows.
+     */
+    public void findVisible(Visitor visitor,
+                            Viewport viewport,
+                            float searchDistance,
+                            boolean useOcclusionCulling,
+                            int frame,
+                            HiZOcclusion hiZ)
+    {
         final var queues = this.queue;
         queues.reset();
 
         this.init(visitor, queues.write(), viewport, searchDistance, useOcclusionCulling, frame);
 
         while (queues.flip()) {
-            processQueue(visitor, viewport, searchDistance, useOcclusionCulling, frame, queues.read(), queues.write());
+            processQueue(visitor, viewport, searchDistance, useOcclusionCulling, frame, queues.read(), queues.write(), hiZ);
         }
 
         this.addNearbySections(visitor, viewport, searchDistance, frame);
@@ -47,12 +64,17 @@ public class OcclusionCuller {
                                      boolean useOcclusionCulling,
                                      int frame,
                                      ReadQueue<RenderSection> readQueue,
-                                     WriteQueue<RenderSection> writeQueue)
+                                     WriteQueue<RenderSection> writeQueue,
+                                     HiZOcclusion hiZ)
     {
         RenderSection section;
 
         while ((section = readQueue.dequeue()) != null) {
             if (!isSectionVisible(section, viewport, searchDistance)) {
+                continue;
+            }
+
+            if (hiZ != null && isHiZOccluded(hiZ, viewport, section)) {
                 continue;
             }
 
@@ -108,6 +130,22 @@ public class OcclusionCuller {
         }
 
         return ~angleOcclusionMask;
+    }
+
+    private static boolean isHiZOccluded(HiZOcclusion hiZ, Viewport viewport, RenderSection section) {
+        var origin = viewport.getChunkCoord();
+
+        // the camera's own section and its neighbours are never tested: they are where reprojection error
+        // (latency, near plane) is largest, and the search through them is cheap
+        if (Math.abs(section.getChunkX() - origin.getX()) <= 1 &&
+                Math.abs(section.getChunkY() - origin.getY()) <= 1 &&
+                Math.abs(section.getChunkZ() - origin.getZ()) <= 1) {
+            return false;
+        }
+
+        // world-space box; the Hi-Z buffer works relative to the real camera, not the viewport's (the vanilla
+        // frustum may have moved its own camera position back to fully include the camera's section)
+        return hiZ.isSectionOccluded(section.getCenterX(), section.getCenterY(), section.getCenterZ(), CHUNK_SECTION_SIZE);
     }
 
     private static boolean isSectionVisible(RenderSection section, Viewport viewport, float maxDistance) {

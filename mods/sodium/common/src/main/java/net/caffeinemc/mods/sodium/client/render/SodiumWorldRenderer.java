@@ -46,6 +46,7 @@ import org.joml.Vector3d;
 
 import java.util.Collection;
 import java.util.Iterator;
+import net.caffeinemc.mods.sodium.client.render.occlusion.HiZOcclusion;
 import java.util.SortedSet;
 import java.util.function.Consumer;
 
@@ -158,6 +159,21 @@ public class SodiumWorldRenderer {
     /**
      * Called prior to any chunk rendering in order to update necessary state.
      */
+    private final org.joml.Matrix4f cullingClipMatrix = new org.joml.Matrix4f();
+    private boolean hasCullingClipMatrix;
+
+    /**
+     * The camera-relative clip matrix of the frustum the next {@link #setupTerrain} call culls with (GPU Hi-Z
+     * occlusion needs the real matrix; the {@link Viewport} only keeps the frustum planes).
+     */
+    public void setCullingClipMatrix(org.joml.Matrix4fc clip) {
+        if (clip != null) {
+            this.cullingClipMatrix.set(clip);
+        }
+
+        this.hasCullingClipMatrix = clip != null;
+    }
+
     public void setupTerrain(Camera camera,
                              Viewport viewport,
                              boolean spectator,
@@ -218,6 +234,17 @@ public class SodiumWorldRenderer {
             this.lastCameraPos = new Vector3d(pos);
         }
 
+        if (this.hasCullingClipMatrix) {
+            this.renderSectionManager.setCullingClipMatrix(this.cullingClipMatrix);
+            this.hasCullingClipMatrix = false;
+        } else {
+            this.renderSectionManager.setCullingClipMatrix(null);
+        }
+
+        if (HiZOcclusion.instance().needsGraphRefresh()) {
+            this.renderSectionManager.markGraphDirty();
+        }
+
         int maxChunkUpdates = updateChunksImmediately ? this.renderDistance : 1;
 
         for (int i = 0; i < maxChunkUpdates; i++) {
@@ -262,6 +289,9 @@ public class SodiumWorldRenderer {
         if (renderLayer == RenderType.solid()) {
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.SOLID, x, y, z);
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.CUTOUT, x, y, z);
+
+            // opaque terrain is complete: hand its depth to the GPU Hi-Z reduction (read back in a later frame)
+            HiZOcclusion.instance().onOpaqueTerrainDrawn(matrices.projection(), matrices.modelView(), x, y, z);
         } else if (renderLayer == RenderType.translucent()) {
             this.renderSectionManager.renderLayer(matrices, DefaultTerrainRenderPasses.TRANSLUCENT, x, y, z);
         }
@@ -495,7 +525,12 @@ public class SodiumWorldRenderer {
             return true;
         }
 
-        return this.isBoxVisible(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
+        if (!this.isBoxVisible(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ)) {
+            return false;
+        }
+
+        // in a visible section but possibly behind a wall in it or in front of it
+        return !HiZOcclusion.instance().isEntityBoxOccluded(bb.minX, bb.minY, bb.minZ, bb.maxX, bb.maxY, bb.maxZ);
     }
 
     public boolean isBoxVisible(double x1, double y1, double z1, double x2, double y2, double z2) {
