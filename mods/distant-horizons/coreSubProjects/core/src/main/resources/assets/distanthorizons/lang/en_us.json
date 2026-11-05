@@ -112,6 +112,18 @@
     "LOD Chunk Render Distance Radius",
   "distanthorizons.config.client.advanced.graphics.quality.lodChunkRenderDistanceRadius.@tooltip":
     "Distant Horizons' render distance, measured in chunks. \n\nNote: this is a best effort number. \nThe render distance may be above or below this number \ndepending on your other graphic settings.",
+  "distanthorizons.config.client.advanced.graphics.quality.altitudeAwareLodDetail":
+    "Altitude Aware LOD Detail",
+  "distanthorizons.config.client.advanced.graphics.quality.altitudeAwareLodDetail.@tooltip":
+    "The camera's height above the terrain counts towards LOD distance \n(like War Thunder): terrain far below an aircraft uses less detail.",
+  "distanthorizons.config.client.advanced.graphics.quality.zoomAwareLodDetail":
+    "Zoom Aware LOD Detail",
+  "distanthorizons.config.client.advanced.graphics.quality.zoomAwareLodDetail.@tooltip":
+    "Zooming in (scopes, spyglass) raises LOD detail like War Thunder. \nZooming out takes effect after 2 seconds.",
+  "distanthorizons.config.client.advanced.graphics.quality.heightBoundFrustumCulling":
+    "Height Bound Frustum Culling",
+  "distanthorizons.config.client.advanced.graphics.quality.heightBoundFrustumCulling.@tooltip":
+    "Frustum cull LOD sections with their real terrain height instead of \nthe whole world height, so less is drawn when looking up or down.",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalQuality":
     "LOD Dropoff Distance",
   "distanthorizons.config.client.advanced.graphics.quality.horizontalQuality.@tooltip":

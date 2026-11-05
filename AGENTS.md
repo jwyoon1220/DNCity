@@ -1204,6 +1204,29 @@ back through a ring of 3 CPU-readable targets without waiting, reprojected into 
   test after warm-up; harness kept outside the repo). **Not yet run in a client**: the GL capture path, the culling
   result on screen, Iris with a shader pack and DH have not been seen.
 
+## War Thunder-style LOD in Distant Horizons (marker `dagor-lod-scaling`)
+
+User request 2026-11-05 ("take War Thunder's good optimizations, LOD too"), only `mods/distant-horizons` changed. Read in
+Dagor's public source: terrain LOD splits patches by 3D distance against each patch's own height bounds and culls them
+with those bounds (`prog/gameLibs/heightmap/heightmapMetricsCulling.cpp` `recursive_split`, `heightmapCulling.h`
+`HeightmapHeightCulling`); `WorldRenderer::updateLodsScaling` (`prog/daNetGame/render/world/worldRenderer.cpp`)
+multiplies LOD distances by the shooter camera's zoom, never below the default. Three DH changes, each a config entry in
+`Config.Client.Advanced.Graphics.Quality` (default on):
+- `altitudeAwareLodDetail`: `LodQuadTree.calculateExpectedDetailLevel` goes through `core/render/LodDetailScaling`; the
+  vertical gap between the camera and the highest meshed terrain of the section's 512-block region (cache filled by
+  `LodBufferContainer` uploads, max only, so it never oscillates; sections wider than a region get no height) is added
+  to DH's horizontal distance. Only a camera above the terrain (aircraft) gets coarser LODs below it.
+- `zoomAwareLodDetail`: distance / zoom, zoom = tan(fovSetting/2) / tan(fov/2) (`IMinecraftRenderWrapper.getFovSetting`,
+  new default method) rounded down to 1/2/4, applied at once on zoom-in, after 2 s on zoom-out (DESIGN, against tree
+  reload thrash). Set each frame in `RenderBufferHandler.buildRenderList` (main pass only).
+- `heightBoundFrustumCulling`: after DH's API frustum (world height only), a JOML `FrustumIntersection` test with the
+  section's real vertex Y range +-1 block (`LodBufferContainer.vertexYRange`); off with earth curvature or frustum
+  culling disabled, never in the shadow pass. The public `IDhApiCullingFrustum` API is unchanged.
+- Not done: Dagor's per-patch precomputed height *error* metric (DH has no simplification error per section) and LOD
+  geomorphing (DH's shader has no parent-level positions). Verified: `:core:compileJava` + `:common:compileJava`
+  (`relocate_natives/*.sh` need the exec bit on Linux for `:core:shadowJar`); `LodDetailScaling` checked by a
+  standalone harness (12 cases). **Not yet run in a client.**
+
 ## Editing the mod metadata template
 
 `mod_authors`, `mod_description`, and version/range values live in `gradle.properties`, not in

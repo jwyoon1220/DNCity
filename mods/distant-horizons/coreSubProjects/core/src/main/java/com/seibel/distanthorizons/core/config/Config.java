@@ -197,6 +197,31 @@ public class Config
 									"")
 							.build();
 					
+					// DNCity: War Thunder (Dagor Engine) style LOD distances, see LodDetailScaling.
+					public static ConfigEntry<Boolean> altitudeAwareLodDetail = new ConfigEntry.Builder<Boolean>()
+							.set(true)
+							.comment(""
+									+ "If true, the camera's height above the terrain counts towards the \n"
+									+ "distance LOD detail is chosen from (like War Thunder), so terrain \n"
+									+ "far below an aircraft is drawn at lower detail. No effect on the ground.")
+							.build();
+					
+					public static ConfigEntry<Boolean> zoomAwareLodDetail = new ConfigEntry.Builder<Boolean>()
+							.set(true)
+							.comment(""
+									+ "If true, zooming in (scopes, spyglass) raises LOD detail like War \n"
+									+ "Thunder does: LOD distances shrink by the zoom factor (2x or 4x). \n"
+									+ "Zooming back out takes effect after 2 seconds.")
+							.build();
+					
+					public static ConfigEntry<Boolean> heightBoundFrustumCulling = new ConfigEntry.Builder<Boolean>()
+							.set(true)
+							.comment(""
+									+ "If true, LOD sections are frustum culled with their real terrain height \n"
+									+ "instead of the whole world height (like War Thunder's terrain patches), \n"
+									+ "so less is drawn when looking up or down.")
+							.build();
+					
 					public static ConfigEntry<EDhApiHorizontalQuality> horizontalQuality = new ConfigEntry.Builder<EDhApiHorizontalQuality>()
 							.set(EDhApiHorizontalQuality.MEDIUM)
 							.comment(""

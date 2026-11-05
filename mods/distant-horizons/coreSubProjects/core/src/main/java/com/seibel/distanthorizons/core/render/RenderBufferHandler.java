@@ -170,13 +170,24 @@ public class RenderBufferHandler implements AutoCloseable
 				&& com.seibel.distanthorizons.core.render.occlusion.SodiumHiZBridge.isReady();
 		boolean enableOcclusionCulling = !isShadowPass && !useSodiumHiZ && Config.Client.Advanced.Graphics.Culling.enableOcclusionCulling.get();
 		this.occlusionCuller.beginFrame();
+		
+		// DNCity: War Thunder (Dagor) style LOD -- feed the camera height and zoom to the detail level selection
+		// (LodDetailScaling), and cull with each section's real height bounds like Dagor's terrain patches do.
+		final boolean flatTerrain = Config.Client.Advanced.Graphics.Experimental.earthCurveRatio.get() == 0;
+		if (!isShadowPass)
+		{
+			LodDetailScaling.updateCamera(MC_RENDER.getCameraExactPosition().y, MC_RENDER.getFov(1.0f), MC_RENDER.getFovSetting(),
+					Config.Client.Advanced.Graphics.Quality.zoomAwareLodDetail.get());
+		}
+		final boolean heightBoundCulling = !isShadowPass && flatTerrain && enableFrustumCulling
+				&& Config.Client.Advanced.Graphics.Quality.heightBoundFrustumCulling.get();
 
 		// worldMinY/worldHeight/matWorldViewProjection are also used below by the occlusion cull
 		// check (same camera matrix the frustum uses), so they're computed together here.
 		int worldMinY = 0;
 		int worldHeight = 0;
 		Matrix4fc matWorldViewProjection = null;
-		if (enableFrustumCulling || enableOcclusionCulling || useSodiumHiZ)
+		if (enableFrustumCulling || enableOcclusionCulling || useSodiumHiZ || heightBoundCulling)
 		{
 			worldMinY = renderParams.clientLevelWrapper.getMinHeight();
 			worldHeight = renderParams.clientLevelWrapper.getMaxHeight();
@@ -204,6 +215,7 @@ public class RenderBufferHandler implements AutoCloseable
 		final int lambdaWorldHeight = worldHeight;
 		final Matrix4fc lambdaMatWorldViewProjection = matWorldViewProjection;
 		final boolean lambdaEnableOcclusionCulling = enableOcclusionCulling;
+		final org.joml.FrustumIntersection heightFrustum = heightBoundCulling ? new org.joml.FrustumIntersection(matWorldViewProjection) : null;
 		
 		
 		
@@ -237,7 +249,7 @@ public class RenderBufferHandler implements AutoCloseable
 			
 			try
 			{
-				if (enableFrustumCulling || lambdaEnableOcclusionCulling || useSodiumHiZ)
+				if (enableFrustumCulling || lambdaEnableOcclusionCulling || useSodiumHiZ || heightFrustum != null)
 				{
 					DhLodPos lodBounds = DhSectionPos.getSectionBBoxPos(renderSection.pos);
 					int blockMinX = lodBounds.getMinX().toBlockWidth();
@@ -258,6 +270,23 @@ public class RenderBufferHandler implements AutoCloseable
 						return true;
 					}
 
+					// DNCity: Dagor-style height-bounded frustum test (the API frustum above only knows the world height)
+					if (heightFrustum != null)
+					{
+						LodBufferContainer boundsContainer = renderSection.bufferContainer;
+						if (boundsContainer != null && boundsContainer.vertexYRange != Long.MIN_VALUE)
+						{
+							int baseY = boundsContainer.minCornerBlockPos.getY();
+							if (!heightFrustum.testAab(
+									blockMinX, baseY + (int) (boundsContainer.vertexYRange >> 32) - 1, blockMinZ,
+									blockMinX + lodBlockWidth, baseY + (int) boundsContainer.vertexYRange + 1, blockMinZ + lodBlockWidth))
+							{
+								this.culledBufferCount++;
+								return true;
+							}
+						}
+					}
+					
 					// DNCity: Sodium Hi-Z occlusion (SodiumHiZBridge); boxes use the section's real vertex
 					// height when its buffers know it (+-1 block for the micro offset), the whole column otherwise.
 					if (useSodiumHiZ)

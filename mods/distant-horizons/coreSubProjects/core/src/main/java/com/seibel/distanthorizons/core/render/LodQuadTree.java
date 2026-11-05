@@ -116,6 +116,7 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			FullDataSourceProviderV2 fullDataSourceProvider)
 	{
 		super(viewDiameterInBlocks, new DhBlockPos2D(initialPlayerBlockX, initialPlayerBlockZ), DhSectionPos.SECTION_MINIMUM_DETAIL_LEVEL);
+		LodDetailScaling.clearTerrainHeights(); // DNCity: a new tree is a new level
 		
 		DebugRenderer.register(this, Config.Client.Advanced.Debugging.DebugWireframe.showQuadTreeRenderStatus);
 		
@@ -509,7 +510,13 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	 * @param sectionPos section position
 	 * @return detail level of this section pos
 	 */
-	public byte calculateExpectedDetailLevel(DhBlockPos2D playerPos, long sectionPos) { return this.getDetailLevelFromDistance(playerPos.dist(DhSectionPos.getCenterBlockPosX(sectionPos), DhSectionPos.getCenterBlockPosZ(sectionPos))); }
+	public byte calculateExpectedDetailLevel(DhBlockPos2D playerPos, long sectionPos)
+	{
+		double distance = playerPos.dist(DhSectionPos.getCenterBlockPosX(sectionPos), DhSectionPos.getCenterBlockPosZ(sectionPos));
+		// DNCity: War Thunder (Dagor) style LOD distance -- camera height above the terrain and scope zoom count, see LodDetailScaling
+		distance = LodDetailScaling.effectiveDistance(distance, sectionPos, Config.Client.Advanced.Graphics.Quality.altitudeAwareLodDetail.get());
+		return this.getDetailLevelFromDistance(distance);
+	}
 	private byte getDetailLevelFromDistance(double distance)
 	{
 		double maxDetailDistance = this.getDrawDistanceFromDetail(Byte.MAX_VALUE - 1);

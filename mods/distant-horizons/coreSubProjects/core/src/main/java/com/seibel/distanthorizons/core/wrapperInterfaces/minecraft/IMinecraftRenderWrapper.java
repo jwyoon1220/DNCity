@@ -55,6 +55,9 @@ public interface IMinecraftRenderWrapper extends IBindable
 	
 	double getFov(float partialTicks);
 	
+	/** DNCity: the player's FOV setting in degrees (no zoom/sprint modifiers), NaN if unknown. */
+	default double getFovSetting() { return Double.NaN; }
+	
 	/** Measured in chunks */
 	int getRenderDistance();
 	

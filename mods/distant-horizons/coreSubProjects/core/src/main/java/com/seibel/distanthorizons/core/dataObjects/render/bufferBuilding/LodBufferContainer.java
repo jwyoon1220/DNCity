@@ -132,6 +132,10 @@ public class LodBufferContainer implements AutoCloseable
 				uploadBuffersDirect(this.vbos, opaqueBuffers, gpuUploadMethod);
 				uploadBuffersDirect(this.vbosTransparent, transparentBuffers, gpuUploadMethod);
 				this.vertexYRange = newVertexYRange;
+				if (newVertexYRange != Long.MIN_VALUE)
+				{
+					com.seibel.distanthorizons.core.render.LodDetailScaling.recordTerrainTop(this.pos, this.minCornerBlockPos.getY() + (int) newVertexYRange);
+				}
 				this.buffersUploaded = true;
 				
 				// success

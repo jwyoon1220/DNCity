@@ -251,6 +251,12 @@ public class MinecraftRenderWrapper implements IMinecraftRenderWrapper
 		return MC.gameRenderer.getFov(MC.gameRenderer.getMainCamera(), partialTicks, true);
 	}
 	
+	@Override
+	public double getFovSetting()
+	{
+		return MC.options.fov().get();
+	}
+	
 	/** Measured in chunks */
 	@Override
 	public int getRenderDistance()
