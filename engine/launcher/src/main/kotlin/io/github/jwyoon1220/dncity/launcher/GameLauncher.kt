@@ -69,7 +69,7 @@ class GameLauncher(private val paths: Paths, private val settings: Settings) {
         cmd += "-Xmx${settings.ramMb}M"
         cmd += "-Xms${(settings.ramMb / 4).coerceAtLeast(512)}M"
         // G1 tuned for short pauses: a profile at 4 GB showed 34 GCs/min with pauses up to 85 ms (frame hitches)
-        cmd += listOf("-XX:+UseG1GC", "-XX:MaxGCPauseMillis=40", "-XX:G1NewSizePercent=30", "-XX:G1ReservePercent=20", "-XX:+ParallelRefProcEnabled")
+        cmd += listOf("-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=40", "-XX:G1NewSizePercent=30", "-XX:G1ReservePercent=20", "-XX:+ParallelRefProcEnabled")
         cmd += settings.extraJvmArgs.split(" ").filter { it.isNotBlank() }
         cmd += jvm
         cmd += merged.str("mainClass") ?: error("mainClass 없음: $versionId")

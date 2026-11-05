@@ -198,6 +198,7 @@ neoForge {
             jvmArgument("-Xmx10G")
             jvmArgument("-Xms4G")
             // short GC pauses (JFR 2026-11-05: 4 GB heap, 34 GCs/min, pauses up to 85 ms)
+            jvmArgument("-XX:+UnlockExperimentalVMOptions") // G1NewSizePercent/G1ReservePercent are experimental flags
             jvmArgument("-XX:MaxGCPauseMillis=40")
             jvmArgument("-XX:G1NewSizePercent=30")
             jvmArgument("-XX:G1ReservePercent=20")
@@ -239,6 +240,7 @@ neoForge {
             jvmArgument("-Xmx10G")
             jvmArgument("-Xms4G")
             // short GC pauses (JFR 2026-11-05: 4 GB heap, 34 GCs/min, pauses up to 85 ms)
+            jvmArgument("-XX:+UnlockExperimentalVMOptions") // G1NewSizePercent/G1ReservePercent are experimental flags
             jvmArgument("-XX:MaxGCPauseMillis=40")
             jvmArgument("-XX:G1NewSizePercent=30")
             jvmArgument("-XX:G1ReservePercent=20")
