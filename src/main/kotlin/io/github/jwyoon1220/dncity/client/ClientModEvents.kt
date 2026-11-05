@@ -45,6 +45,7 @@ object ClientModEvents {
     @SubscribeEvent
     fun onRegisterGuiLayers(event: RegisterGuiLayersEvent) {
         event.registerAboveAll(VehicleHitCamOverlay.ID, VehicleHitCamOverlay)
+        event.registerAboveAll(io.github.jwyoon1220.dncity.client.dispatch.DispatchHud.ID, io.github.jwyoon1220.dncity.client.dispatch.DispatchHud)
         // Red ballistic armor row above vanilla's armor row
         event.registerAbove(VanillaGuiLayers.ARMOR_LEVEL, BallisticArmorBar.ID, BallisticArmorBar)
     }
@@ -126,7 +127,10 @@ object ClientModEvents {
 
     private fun onWindowOverlayLogout(event: ClientPlayerNetworkEvent.LoggingOut) = WindowOverlayManager.destroyAll()
 
-    private fun onPhoneLogout(event: ClientPlayerNetworkEvent.LoggingOut) = PhoneController.close()
+    private fun onPhoneLogout(event: ClientPlayerNetworkEvent.LoggingOut) {
+        PhoneController.close()
+        io.github.jwyoon1220.dncity.client.dispatch.DispatchClientState.clear()
+    }
 
     // ClientTickEvent.Post already runs on the render thread, so PhoneController.toggle() can be
     // called directly here -- unlike PhoneCommand's handlers, which hop via

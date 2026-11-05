@@ -43,6 +43,7 @@ object LifeServerEvents {
             payroll(player)
             wanted(player)
         }
+        io.github.jwyoon1220.dncity.dispatch.DispatchService.tick(server)
     }
 
     private fun payroll(player: ServerPlayer) {
@@ -109,6 +110,7 @@ object LifeServerEvents {
         Life.set(player, data.copy(account = account, job = job, wanted = wanted))
         if (wanted.stars != before) announceStars(player, wanted.stars)
         info(player, "범죄: ${crime.ko}")
+        io.github.jwyoon1220.dncity.dispatch.DispatchService.onCrime(player, crime, wanted.stars)
     }
 
     fun onDeath(event: LivingDeathEvent) {

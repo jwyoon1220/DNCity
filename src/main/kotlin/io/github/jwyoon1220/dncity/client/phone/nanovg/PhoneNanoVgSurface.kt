@@ -38,7 +38,7 @@ import org.lwjgl.opengl.GL30
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-enum class PhonePage { HOME, DIALER, MESSAGES }
+enum class PhonePage { HOME, DIALER, MESSAGES, DISPATCH }
 
 sealed class PhoneAction {
     data class Navigate(val page: PhonePage) : PhoneAction()
@@ -312,6 +312,7 @@ object PhoneNanoVgSurface {
             PhonePage.HOME -> drawHomePage(col, hits, screenW)
             PhonePage.DIALER -> drawDialerPage(col, hits, screenW)
             PhonePage.MESSAGES -> drawMessagesPage(col, hits, screenW)
+            PhonePage.DISPATCH -> drawDispatchPage(col, hits, screenW)
         }
 
         nvgRestore(ctx)
@@ -448,6 +449,12 @@ object PhoneNanoVgSurface {
         y += 60f
         drawWideButton(col, x, y, w, 48f, "탄약 상점", primary = true)
         hits += HitRect(x, y, w, 48f, PhoneAction.OpenAmmoShop)
+        // police only (the server tells the client, see network.DispatchRolePayload)
+        if (io.github.jwyoon1220.dncity.client.dispatch.DispatchClientState.police) {
+            y += 60f
+            drawWideButton(col, x, y, w, 48f, "디스패치", primary = true)
+            hits += HitRect(x, y, w, 48f, PhoneAction.Navigate(PhonePage.DISPATCH))
+        }
     }
 
     private fun drawDialerPage(col: NVGColor, hits: MutableList<HitRect>, screenW: Float) {
@@ -479,6 +486,64 @@ object PhoneNanoVgSurface {
         y += 54f
         drawWideButton(col, bx, y, bw, 40f, "뒤로", primary = false)
         hits += HitRect(bx, y, bw, 40f, PhoneAction.Navigate(PhonePage.HOME))
+    }
+
+    /** Police dispatch app: the newest calls (crime, stars, suspect, where relative to the player, time), tap Back to leave. */
+    private fun drawDispatchPage(col: NVGColor, hits: MutableList<HitRect>, screenW: Float) {
+        val x = FIELD_MARGIN.toFloat()
+        val w = screenW - FIELD_MARGIN * 2f
+        var y = CONTENT_Y + 12f
+
+        nvgFontFace(ctx, "phone")
+        nvgFontSize(ctx, 18f)
+        nvgFillColor(ctx, color(255, 255, 255, 255, col))
+        nvgTextAlign(ctx, NVG_ALIGN_LEFT or NVG_ALIGN_MIDDLE)
+        boldText(x, y + 12f, "디스패치")
+        y += 34f
+
+        val calls = io.github.jwyoon1220.dncity.client.dispatch.DispatchClientState.snapshot()
+        if (calls.isEmpty()) {
+            nvgFontSize(ctx, 13f)
+            nvgFillColor(ctx, color(170, 170, 176, 255, col))
+            boldText(x, y + 14f, "출동 요청이 없습니다.")
+        }
+        val zone = java.time.ZoneId.systemDefault()
+        val cardH = 62f
+        for (call in calls.take(8)) {
+            nvgBeginPath(ctx)
+            nvgRoundedRect(ctx, x, y, w, cardH - 6f, 8f)
+            nvgFillColor(ctx, color(255, 255, 255, 22, col))
+            nvgFill(ctx)
+            // left stripe: red for 3+ stars, amber otherwise
+            nvgBeginPath(ctx)
+            nvgRoundedRect(ctx, x, y, 4f, cardH - 6f, 2f)
+            nvgFillColor(ctx, if (call.stars >= 3) color(229, 50, 45, 255, col) else color(255, 190, 60, 255, col))
+            nvgFill(ctx)
+
+            nvgFontSize(ctx, 14f)
+            nvgFillColor(ctx, color(255, 255, 255, 255, col))
+            nvgTextAlign(ctx, NVG_ALIGN_LEFT or NVG_ALIGN_MIDDLE)
+            boldText(x + 12f, y + 14f, "#${call.id}  ${call.crime}")
+            nvgFillColor(ctx, color(255, 201, 60, 255, col))
+            nvgTextAlign(ctx, NVG_ALIGN_RIGHT or NVG_ALIGN_MIDDLE)
+            boldText(x + w - 8f, y + 14f, "★".repeat(call.stars.coerceIn(0, 5)))
+
+            nvgFontSize(ctx, 12f)
+            nvgFillColor(ctx, color(200, 204, 212, 255, col))
+            nvgTextAlign(ctx, NVG_ALIGN_LEFT or NVG_ALIGN_MIDDLE)
+            boldText(x + 12f, y + 30f, "용의자 ${call.suspect}")
+            nvgFillColor(ctx, color(111, 227, 154, 255, col))
+            boldText(x + 12f, y + 44f, io.github.jwyoon1220.dncity.client.dispatch.DispatchHud.where(call))
+            nvgFillColor(ctx, color(150, 154, 162, 255, col))
+            nvgTextAlign(ctx, NVG_ALIGN_RIGHT or NVG_ALIGN_MIDDLE)
+            val time = java.time.Instant.ofEpochMilli(call.epochMs).atZone(zone).toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+            boldText(x + w - 8f, y + 44f, time)
+            y += cardH
+        }
+
+        val by = CONTENT_Y + CONTENT_HEIGHT - 56f
+        drawWideButton(col, x, by, w, 40f, "뒤로", primary = false)
+        hits += HitRect(x, by, w, 40f, PhoneAction.Navigate(PhonePage.HOME))
     }
 
     private fun drawMessagesPage(col: NVGColor, hits: MutableList<HitRect>, screenW: Float) {

@@ -104,10 +104,12 @@ object Dncity {
         NeoForge.EVENT_BUS.addListener(LifeServerEvents::onRespawn)
         NeoForge.EVENT_BUS.addListener(LifeServerEvents::onLoggedOut)
         NeoForge.EVENT_BUS.addListener(ShopCommand::onRegisterCommands)
+        NeoForge.EVENT_BUS.addListener(io.github.jwyoon1220.dncity.command.DispatchCommand::onRegisterCommands)
         NeoForge.EVENT_BUS.addListener(MarketService::onServerStarted)
         NeoForge.EVENT_BUS.addListener(MarketService::onServerStopped)
         NeoForge.EVENT_BUS.addListener(MarketService::onServerTick)
         MOD_BUS.addListener(ShopNetworking::onRegisterPayloadHandlers)
+        MOD_BUS.addListener(io.github.jwyoon1220.dncity.network.DispatchNetworking::onRegisterPayloadHandlers)
 
         NeoForge.EVENT_BUS.addListener(RadioCommand::onRegisterCommands)
         NeoForge.EVENT_BUS.addListener(MusicCommand::onRegisterCommands)
