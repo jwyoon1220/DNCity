@@ -206,6 +206,14 @@ public class Config
 									+ "far below an aircraft is drawn at lower detail. No effect on the ground.")
 							.build();
 					
+					public static ConfigEntry<Boolean> zoomExtendsLodRange = new ConfigEntry.Builder<Boolean>()
+							.set(true)
+							.comment(""
+									+ "If true, zooming in (scopes, spyglass) also extends how far LODs are \n"
+									+ "loaded and drawn, by the zoom factor (2x or 4x of the LOD radius). \n"
+									+ "Costs memory for the wider LOD tree. Changing it rebuilds the LODs.")
+							.build();
+					
 					public static ConfigEntry<Boolean> zoomAwareLodDetail = new ConfigEntry.Builder<Boolean>()
 							.set(true)
 							.comment(""

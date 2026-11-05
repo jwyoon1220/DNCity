@@ -94,7 +94,7 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 		
 		// TODO this should probably be handled via a config change listener
 		// recreate the RenderState if the render distance changes
-		if (clientRenderState.quadtree.blockRenderDistanceDiameter != Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get() * LodUtil.CHUNK_WIDTH * 2)
+		if (clientRenderState.quadtree.blockRenderDistanceDiameter != (int) (Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get() * LodUtil.CHUNK_WIDTH * 2 * com.seibel.distanthorizons.core.render.LodDetailScaling.rangeCapMul()))
 		{
 			if (!this.ClientRenderStateRef.compareAndSet(clientRenderState, null))
 			{
@@ -254,7 +254,7 @@ public class ClientLevelModule implements Closeable, IDataSourceUpdateListenerFu
 		{
 			this.quadtree = new LodQuadTree(
 					dhClientLevel, 
-					Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get() * LodUtil.CHUNK_WIDTH * 2,
+					(int) (Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get() * LodUtil.CHUNK_WIDTH * 2 * com.seibel.distanthorizons.core.render.LodDetailScaling.rangeCapMul()),
 					// initial position is (0,0) just in case the player hasn't loaded in yet, the tree will be moved once the level starts ticking
 					0, 0,
 					fullDataSourceProvider);

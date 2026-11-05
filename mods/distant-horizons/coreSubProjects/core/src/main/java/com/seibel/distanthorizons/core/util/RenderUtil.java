@@ -184,7 +184,7 @@ public class RenderUtil
 		int lodChunkDist = Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get();
 		int lodBlockDist = lodChunkDist * LodUtil.CHUNK_WIDTH;
 		// * 2 to prevent clipping when high above the world
-		return (lodBlockDist + LodUtil.REGION_WIDTH) * 2;
+		return (int) ((lodBlockDist * com.seibel.distanthorizons.core.render.LodDetailScaling.rangeMul() + LodUtil.REGION_WIDTH) * 2); // DNCity: zoom extends the range
 	}
 	
 	/** @return -1 if no override is necessary */

@@ -143,6 +143,18 @@ public final class LodDetailScaling
 
 	public static double getZoomMul() { return zoomMul; }
 
+	/** How much wider than the configured radius the LOD tree is built (1 when the feature is off). */
+	public static double rangeCapMul()
+	{
+		return com.seibel.distanthorizons.core.config.Config.Client.Advanced.Graphics.Quality.zoomExtendsLodRange.get() ? MAX_ZOOM_MUL : 1.0;
+	}
+
+	/** Current multiplier of the loaded/drawn LOD radius: the scope zoom, 1 when the feature is off. */
+	public static double rangeMul()
+	{
+		return com.seibel.distanthorizons.core.config.Config.Client.Advanced.Graphics.Quality.zoomExtendsLodRange.get() ? zoomMul : 1.0;
+	}
+
 	/**
 	 * The distance to pick {@code sectionPos}'s detail level from.
 	 *

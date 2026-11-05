@@ -215,6 +215,8 @@ public class RenderBufferHandler implements AutoCloseable
 		final int lambdaWorldHeight = worldHeight;
 		final Matrix4fc lambdaMatWorldViewProjection = matWorldViewProjection;
 		final boolean lambdaEnableOcclusionCulling = enableOcclusionCulling;
+		final double lambdaCamX = MC_RENDER.getCameraExactPosition().x;
+		final double lambdaCamZ = MC_RENDER.getCameraExactPosition().z;
 		final org.joml.FrustumIntersection heightFrustum = heightBoundCulling ? new org.joml.FrustumIntersection(matWorldViewProjection) : null;
 		
 		
@@ -249,6 +251,12 @@ public class RenderBufferHandler implements AutoCloseable
 			
 			try
 			{
+				// DNCity: sections left over from a larger zoom are not drawn once the zoom is back
+				if (!this.lodQuadTree.isInEffectiveRange(lambdaCamX, lambdaCamZ, renderSection.pos))
+				{
+					return true;
+				}
+				
 				if (enableFrustumCulling || lambdaEnableOcclusionCulling || useSodiumHiZ || heightFrustum != null)
 				{
 					DhLodPos lodBounds = DhSectionPos.getSectionBBoxPos(renderSection.pos);

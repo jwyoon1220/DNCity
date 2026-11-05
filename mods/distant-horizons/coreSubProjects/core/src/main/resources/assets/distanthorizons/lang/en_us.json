@@ -120,6 +120,11 @@
     "Zoom Aware LOD Detail",
   "distanthorizons.config.client.advanced.graphics.quality.zoomAwareLodDetail.@tooltip":
     "Zooming in (scopes, spyglass) raises LOD detail like War Thunder. \nZooming out takes effect after 2 seconds.",
+  "distanthorizons.config.client.advanced.graphics.quality.zoomExtendsLodRange":
+    "Zoom Extends LOD Range",
+  "distanthorizons.config.client.advanced.graphics.quality.zoomExtendsLodRange.@tooltip":
+    "Zooming in (scopes, spyglass) also loads and draws LODs further away, by the zoom factor. 
+Uses more memory; changing it rebuilds the LODs.",
   "distanthorizons.config.client.advanced.graphics.quality.heightBoundFrustumCulling":
     "Height Bound Frustum Culling",
   "distanthorizons.config.client.advanced.graphics.quality.heightBoundFrustumCulling.@tooltip":

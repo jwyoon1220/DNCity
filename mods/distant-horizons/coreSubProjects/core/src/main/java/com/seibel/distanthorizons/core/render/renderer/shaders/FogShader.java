@@ -153,7 +153,7 @@ public class FogShader extends AbstractShaderRenderer
 	@Override
 	protected void onApplyUniforms(float partialTicks)
 	{
-		int lodDrawDistance = Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get() * LodUtil.CHUNK_WIDTH;
+		int lodDrawDistance = (int) (Config.Client.Advanced.Graphics.Quality.lodChunkRenderDistanceRadius.get() * LodUtil.CHUNK_WIDTH * com.seibel.distanthorizons.core.render.LodDetailScaling.rangeMul());
 		
 		
 		

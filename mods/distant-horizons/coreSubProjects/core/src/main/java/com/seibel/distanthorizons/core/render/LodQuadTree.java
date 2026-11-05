@@ -245,6 +245,12 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 		// and render section  //
 		//=====================//
 		
+		// DNCity: beyond the (zoom extended) range nothing new is created or loaded
+		if (!this.isInEffectiveRange(playerPos.x, playerPos.z, sectionPos))
+		{
+			return false;
+		}
+		
 		// create the node
 		if (quadNode == null && this.isSectionPosInBounds(sectionPos)) // the position bounds should only fail when at the edge of the user's render distance
 		{
@@ -360,7 +366,9 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 			}
 		}
 		// TODO this should only equal the expected detail level, the (expectedDetailLevel-1) is a temporary fix to prevent corners from being cut out 
-		else if (DhSectionPos.getDetailLevel(sectionPos) == expectedDetailLevel || DhSectionPos.getDetailLevel(sectionPos) == expectedDetailLevel - 1)
+		// DNCity: '<=' instead of '== or -1': the expected level now depends on camera height and zoom, which change between a
+		// parent's and its child's evaluation, so a child can be finer than expected; render it instead of throwing.
+		else if (DhSectionPos.getDetailLevel(sectionPos) <= expectedDetailLevel)
 		{
 			//======================//
 			// desired detail level //
@@ -510,6 +518,19 @@ public class LodQuadTree extends QuadTree<LodRenderSection> implements IDebugRen
 	 * @param sectionPos section position
 	 * @return detail level of this section pos
 	 */
+	/**
+	 * DNCity: the tree is built {@link LodDetailScaling#rangeCapMul()} times wider than the configured radius, but only the
+	 * configured radius times the current scope zoom is loaded and drawn (a scope shows further, like War Thunder).
+	 */
+	public boolean isInEffectiveRange(double px, double pz, long sectionPos)
+	{
+		double radius = this.blockRenderDistanceDiameter * 0.5 / LodDetailScaling.rangeCapMul() * LodDetailScaling.rangeMul();
+		double half = DhSectionPos.getBlockWidth(sectionPos) * 0.5;
+		double dx = Math.max(0, Math.abs(DhSectionPos.getCenterBlockPosX(sectionPos) - px) - half);
+		double dz = Math.max(0, Math.abs(DhSectionPos.getCenterBlockPosZ(sectionPos) - pz) - half);
+		return Math.max(dx, dz) <= radius;
+	}
+	
 	public byte calculateExpectedDetailLevel(DhBlockPos2D playerPos, long sectionPos)
 	{
 		double distance = playerPos.dist(DhSectionPos.getCenterBlockPosX(sectionPos), DhSectionPos.getCenterBlockPosZ(sectionPos));
