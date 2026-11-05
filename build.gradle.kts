@@ -195,7 +195,13 @@ neoForge {
             // (see AGENTS.md), not via IDE-generated run configurations.
             disableIdeRun()
             client()
-            jvmArgument("-Xmx4G")
+            jvmArgument("-Xmx10G")
+            jvmArgument("-Xms4G")
+            // short GC pauses (JFR 2026-11-05: 4 GB heap, 34 GCs/min, pauses up to 85 ms)
+            jvmArgument("-XX:MaxGCPauseMillis=40")
+            jvmArgument("-XX:G1NewSizePercent=30")
+            jvmArgument("-XX:G1ReservePercent=20")
+            jvmArgument("-XX:+ParallelRefProcEnabled")
             // WindowOverlay.ensureAwtAvailable() resets GraphicsEnvironment's cached `headless`
             // field via reflection (see its doc) so BrowserOverlay/JCEF can use AWT despite
             // Main.java forcing java.awt.headless=true at boot -- needs java.awt's internals
@@ -230,7 +236,13 @@ neoForge {
         create("client2") {
             disableIdeRun()
             client()
-            jvmArgument("-Xmx4G")
+            jvmArgument("-Xmx10G")
+            jvmArgument("-Xms4G")
+            // short GC pauses (JFR 2026-11-05: 4 GB heap, 34 GCs/min, pauses up to 85 ms)
+            jvmArgument("-XX:MaxGCPauseMillis=40")
+            jvmArgument("-XX:G1NewSizePercent=30")
+            jvmArgument("-XX:G1ReservePercent=20")
+            jvmArgument("-XX:+ParallelRefProcEnabled")
             jvmArgument("--add-opens=java.desktop/java.awt=ALL-UNNAMED,dncity")
             devLogin = false
             gameDirectory = file("run-client2")

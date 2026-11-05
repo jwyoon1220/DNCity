@@ -7,7 +7,7 @@ import java.util.UUID
 
 /** Persisted launcher settings (`<root>/launcher.json`). Every field has a default, so Gson can fill gaps. */
 class Settings {
-    var ramMb: Int = 4096
+    var ramMb: Int = 8192
 
     /** Blank = the runtime bundled with the launcher. */
     var javaPath: String = ""

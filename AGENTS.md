@@ -1280,3 +1280,7 @@ bombs are its own items. There is no SAP round anywhere in the game data, so non
 ## Fonts (2026-11-05)
 
 `assets/modernui/font/NotoSansKR-Regular.ttf` / `-Bold.ttf` are static wght 400/700 instances cut from Google's variable Noto Sans KR (`assets/dncity/fonts/NotoSansKR-VF.ttf`, default instance is Thin, which is why the earlier file named "Regular" looked hairline). ModernUI registers only `modernui:font/*` resource fonts, so they live in that namespace; the phone's NanoVG surface reads the same file. `ConfigImpl` puts "Noto Sans KR" first in ModernUI's default `fallbackFontFamilyList` (an existing `config/ModernUI/client.toml` keeps its old list and needs the entry added; Korean otherwise falls to a system font, Gulim on Korean Windows). D2Coding (`.ttc`) is bundled but nothing loads it yet. Licenses: `OFL-NotoSansKR.txt`, `OFL-D2Coding.txt`.
+
+## Frame drops: GC, not threads (2026-11-05)
+
+JFR of an idle dev client (60 s): the render and server threads were only ~8 % of Java CPU samples (DH world gen 62 %, on its own pool); the hitches were **garbage collection**: heap 3.8 of 4.0 GB used, 34 GCs/min, nine G1Old pauses of 22-85 ms. Dev runs now use `-Xmx10G -Xms4G` plus short-pause G1 flags (`build.gradle.kts`, both `runClient` and `runClient2`); the launcher's default RAM is 8 GB and it adds the same G1 flags (`GameLauncher`). An existing launcher `settings.json` keeps its old `ramMb`. VoxelMap's `new EditBox(..., null)` crashed on open (narration of a null message); now `Component.empty()`.

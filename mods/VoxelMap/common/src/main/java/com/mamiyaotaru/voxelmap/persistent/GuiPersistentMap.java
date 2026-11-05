@@ -234,7 +234,7 @@ public class GuiPersistentMap extends PopupGuiScreen implements IGuiWaypoints {
                 VoxelConstants.getMinecraft().setScreen(GuiPersistentMap.this.parent);
             }
         });
-        this.coordinates = new EditBox(this.getFontRenderer(), this.sideMargin, 10, 140, 20, null);
+        this.coordinates = new EditBox(this.getFontRenderer(), this.sideMargin, 10, 140, 20, net.minecraft.network.chat.Component.empty());
         this.top = 32;
         this.bottom = this.getHeight() - 32;
         this.centerX = this.getWidth() / 2;

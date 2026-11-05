@@ -68,15 +68,15 @@ public class GuiAddWaypoint extends GuiScreenMinimap implements IPopupGuiScreen 
 
     public void init() {
         this.clearWidgets();
-        this.waypointName = new EditBox(this.getFontRenderer(), this.getWidth() / 2 - 100, this.getHeight() / 6 + 13, 200, 20, null);
+        this.waypointName = new EditBox(this.getFontRenderer(), this.getWidth() / 2 - 100, this.getHeight() / 6 + 13, 200, 20, net.minecraft.network.chat.Component.empty());
         this.waypointName.setValue(this.waypoint.name);
-        this.waypointX = new EditBox(this.getFontRenderer(), this.getWidth() / 2 - 100, this.getHeight() / 6 + 41 + 13, 56, 20, null);
+        this.waypointX = new EditBox(this.getFontRenderer(), this.getWidth() / 2 - 100, this.getHeight() / 6 + 41 + 13, 56, 20, net.minecraft.network.chat.Component.empty());
         this.waypointX.setMaxLength(128);
         this.waypointX.setValue(String.valueOf(this.waypoint.getX()));
-        this.waypointZ = new EditBox(this.getFontRenderer(), this.getWidth() / 2 - 28, this.getHeight() / 6 + 41 + 13, 56, 20, null);
+        this.waypointZ = new EditBox(this.getFontRenderer(), this.getWidth() / 2 - 28, this.getHeight() / 6 + 41 + 13, 56, 20, net.minecraft.network.chat.Component.empty());
         this.waypointZ.setMaxLength(128);
         this.waypointZ.setValue(String.valueOf(this.waypoint.getZ()));
-        this.waypointY = new EditBox(this.getFontRenderer(), this.getWidth() / 2 + 44, this.getHeight() / 6 + 41 + 13, 56, 20, null);
+        this.waypointY = new EditBox(this.getFontRenderer(), this.getWidth() / 2 + 44, this.getHeight() / 6 + 41 + 13, 56, 20, net.minecraft.network.chat.Component.empty());
         this.waypointY.setMaxLength(128);
         this.waypointY.setValue(String.valueOf(this.waypoint.getY()));
         this.addRenderableWidget(this.waypointName);
