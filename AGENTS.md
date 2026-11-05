@@ -242,7 +242,7 @@ of these; only the load-bearing gotchas are repeated here:
   upstream), that skips the shadow pass entirely while leaving the normal lighting/gbuffer pass
   untouched, so distant terrain is lit correctly under a shader pack without casting/receiving
   shadows. Default performance settings are also tuned down from upstream for this specific pack
-  (`Config.java`): `qualityPresetSetting` MEDIUM→LOW, `threadPresetSetting` BALANCED→LOW_IMPACT
+  (`Config.java`): `qualityPresetSetting` MEDIUM→LOW, `threadPresetSetting` BALANCED→AGGRESSIVE (2026-11-05, user wants fast LOD generation; it all runs on DH worker threads at priority 3, never the server/render thread; was LOW_IMPACT)
   (25% of logical cores instead of 50%, via `ThreadPresetConfigEventHandler`'s shared
   `numberOfThreads` budget — see `util/threading/ThreadPoolUtil.java`/`PriorityTaskPicker.java`),
   and `lodChunkRenderDistanceRadius` 256→128 chunks — because Sodium/Iris/Flywheel/Veil are
