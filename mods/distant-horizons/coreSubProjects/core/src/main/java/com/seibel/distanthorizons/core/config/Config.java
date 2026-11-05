@@ -210,7 +210,7 @@ public class Config
 							.set(true)
 							.comment(""
 									+ "If true, zooming in (scopes, spyglass) also extends how far LODs are \n"
-									+ "loaded and drawn, by the zoom factor (2x or 4x of the LOD radius). \n"
+									+ "loaded and drawn, by the zoom factor, up to 8x the LOD radius. \n"
 									+ "Costs memory for the wider LOD tree. Changing it rebuilds the LODs.")
 							.build();
 					

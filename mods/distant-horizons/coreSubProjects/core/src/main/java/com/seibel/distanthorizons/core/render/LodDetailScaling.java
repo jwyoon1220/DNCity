@@ -49,7 +49,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class LodDetailScaling
 {
 	/** Highest zoom multiplier applied (a 4x scope or a spyglass both end up here). */
-	public static final double MAX_ZOOM_MUL = 4.0;
+	public static final double MAX_ZOOM_MUL = 32.0;
+	/** Highest multiplier of the loaded/drawn LOD radius (the tree is built this much wider). */
+	public static final double MAX_RANGE_MUL = 8.0;
 	/** A lower zoom multiplier only takes over after it has been seen continuously for this long. */
 	public static final long ZOOM_OUT_DELAY_NANOS = 2_000_000_000L;
 
@@ -87,11 +89,8 @@ public final class LodDetailScaling
 		if (zoomEnabled && fovDegrees > 0.0 && defaultFovDegrees > 0.0 && fovDegrees < defaultFovDegrees)
 		{
 			double raw = Math.tan(Math.toRadians(defaultFovDegrees) * 0.5) / Math.tan(Math.toRadians(fovDegrees) * 0.5);
-			target = 1.0;
-			while (target * 2.0 <= raw && target * 2.0 <= MAX_ZOOM_MUL)
-			{
-				target *= 2.0;
-			}
+			// nearest power of two (in log space), so a 24x scope gets 32x rather than 16x
+			target = Math.min(MAX_ZOOM_MUL, Math.max(1.0, Math.pow(2.0, Math.round(Math.log(raw) / Math.log(2.0)))));
 		}
 
 		double current = zoomMul;
@@ -146,13 +145,13 @@ public final class LodDetailScaling
 	/** How much wider than the configured radius the LOD tree is built (1 when the feature is off). */
 	public static double rangeCapMul()
 	{
-		return com.seibel.distanthorizons.core.config.Config.Client.Advanced.Graphics.Quality.zoomExtendsLodRange.get() ? MAX_ZOOM_MUL : 1.0;
+		return com.seibel.distanthorizons.core.config.Config.Client.Advanced.Graphics.Quality.zoomExtendsLodRange.get() ? MAX_RANGE_MUL : 1.0;
 	}
 
 	/** Current multiplier of the loaded/drawn LOD radius: the scope zoom, 1 when the feature is off. */
 	public static double rangeMul()
 	{
-		return com.seibel.distanthorizons.core.config.Config.Client.Advanced.Graphics.Quality.zoomExtendsLodRange.get() ? zoomMul : 1.0;
+		return com.seibel.distanthorizons.core.config.Config.Client.Advanced.Graphics.Quality.zoomExtendsLodRange.get() ? Math.min(zoomMul, MAX_RANGE_MUL) : 1.0;
 	}
 
 	/**
