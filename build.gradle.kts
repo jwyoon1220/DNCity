@@ -47,6 +47,16 @@ configurations.all {
     )
 }
 
+// Patchouli (a runtimeOnly dependency of mods/SuperbWarfare, for its guide book only; nothing here or in SuperbWarfare's
+// code references it) crashes the dev client in FMLCommonSetupEvent: `ServiceConfigurationError: IXplatAbstractions:
+// NeoForgeXplatImpl not a subtype` (the jar is both a mod module and on the classpath, so ServiceLoader on a worker thread
+// sees a second copy of its interface). Left out of the dev runtime only; distribution jars are unaffected.
+configurations.configureEach {
+    if (isCanBeResolved && name.contains("untime", ignoreCase = true)) {
+        exclude(group = "curse.maven", module = "patchouli-306770")
+    }
+}
+
 repositories {
     mavenLocal()
     mavenCentral()

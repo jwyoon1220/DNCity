@@ -32,19 +32,6 @@ class Installer(private val paths: Paths, private val java: String, private val 
                 jar.parent?.resolve("bundled-mods")?.takeIf(Files::isDirectory)
             }.getOrNull()
         }
-
-        /** Newest stable NeoForge for a Minecraft version (`1.21.1` -> `21.1.x`), or null if the lookup fails. */
-        fun latestNeoForge(minecraftVersion: String): String? = try {
-            val parts = minecraftVersion.split(".")
-            val prefix = "${parts[1]}.${parts.getOrElse(2) { "0" }}."
-            Regex("<version>([^<]+)</version>")
-                .findAll(Http.string(NEOFORGE_MAVEN + "maven-metadata.xml"))
-                .map { it.groupValues[1] }
-                .filter { it.startsWith(prefix) && !it.contains("-") }
-                .maxByOrNull { v -> v.removePrefix(prefix).toIntOrNull() ?: -1 }
-        } catch (_: Exception) {
-            null
-        }
     }
 
     /** Installs vanilla + NeoForge and returns the version id to launch. */
@@ -298,19 +285,4 @@ class Installer(private val paths: Paths, private val java: String, private val 
         return name
     }
 
-    // ------------------------------------------------------------------ pack sync
-
-    /** Optional: downloads the mods listed in a pack manifest into `<gameDir>/mods`. */
-    fun syncPack(url: String) {
-        if (url.isBlank()) return
-        progress.status("모드팩 동기화 중")
-        val manifest = JsonParser.parseString(Http.string(url)).asJsonObject
-        val modsDir = paths.gameDir.resolve("mods")
-        val items = manifest.arr("mods")?.map { it.asJsonObject }?.map {
-            val name = it.str("name")!!
-            require(!name.contains('/') && !name.contains('\\') && name != "..") { "잘못된 모드 파일명: $name" }
-            Download(it.str("url")!!, modsDir.resolve(name), it.str("sha1"))
-        }.orEmpty()
-        Http.downloadAll(items, progress)
-    }
 }

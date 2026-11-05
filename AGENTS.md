@@ -1145,11 +1145,11 @@ substitution; the root `build` task depends on its `assemble`.
 - **Install** (`Installer`): vanilla client/libraries/assets from Mojang, then NeoForge (`neo_version`, default
   `Settings.neoForgeVersion`): downloads the installer jar, writes its `version.json`, unpacks `maven/`, runs the
   client-side processors from `install_profile.json` (skipped when their outputs' sha1 already match). Idempotent;
-  a finished install starts offline. Optional pack manifest URL (`{"mods":[{"name","url","sha1"}]}`) syncs `mods/`.
+  a finished install starts offline. This is a DNCity-only launcher, not a general one: Minecraft 1.21.1 / NeoForge 21.1.248 are constants in `Settings` (not user settings), and the settings dialog only has Java path, JVM args and game folder (RAM/username are on the main screen). The old pack-manifest URL, version fields and Azure-ID field were removed; mods come only from the bundled folder.
 - **Launch** (`GameLauncher`): rules-filtered jvm/game args, `${...}` substitution. The inherited client jar is copied to
   `versions/<id>/<id>.jar` (NeoForge's bootstraplauncher only ignores `${version_name}.jar`; the vanilla name clashes
   with the patched `minecraft` module). Commands over 20k chars go through a JDK `@argfile` (CreateProcess limit).
-- **Accounts** (`Auth.kt`): offline (`Session.offline`, vanilla offline UUID) or Microsoft: OAuth device-code flow -> Xbox Live -> XSTS -> Minecraft services -> profile (same chain as CmlLib/XboxAuthNet). Only the refresh token is kept, in `<root>/account.json`, rotated on every launch. Default client id = `00000000402b5328`, exactly what CmlLib.Core.Auth.Microsoft uses (`XboxGameTitles.MinecraftJava`, the official launcher's id, so Mojang's API accepts it; it is NOT DNCity's and can be blocked). Such 16-hex ids use the Live endpoints (`login.live.com/oauth20_connect.srf` / `oauth20_token.srf`); a GUID id uses Entra v2 `consumers`. DNCity's own Azure app "Parin" (`5ac81d8f-ef78-47ca-827b-78335e5e035c`, needs "Allow public client flows") gets HTTP 403 from `login_with_xbox` until Mojang approves it (https://aka.ms/mce-reviewappid); then set it via the settings field, `-Ddncity.msClientId` or env `DNCITY_MS_CLIENT_ID`. Device-code request verified live; full sign-in not run end to end.
+- **Accounts** (`Auth.kt`): the window has no nickname field and no offline mode: Play requires a Microsoft login (user, 2026-11-04). `Session.offline` is left only for the `--install`/`--run` debug CLI. Login: OAuth device-code flow -> Xbox Live -> XSTS -> Minecraft services -> profile (same chain as CmlLib/XboxAuthNet). Only the refresh token is kept, in `<root>/account.json`, rotated on every launch. Default client id = DNCity's own Azure app "Parin" (`5ac81d8f-ef78-47ca-827b-78335e5e035c`, personal accounts, needs "Allow public client flows"; Mojang approved it 2026-11-04 per the user's approval email, https://aka.ms/mce-reviewappid). A GUID id uses Entra v2 `consumers`; 16-hex ids use the Live endpoints (`login.live.com/oauth20_connect.srf` / `oauth20_token.srf`). Developer override only via `-Ddncity.msClientId` or env `DNCITY_MS_CLIENT_ID` (no settings field any more); the old default `00000000402b5328` (CmlLib.Core's `XboxGameTitles.MinecraftJava`, the official launcher's id) still works there. Device-code request verified live; full sign-in with Parin not yet run end to end.
 - **Bundled mods**: root `stageLauncherMods` copies dncity + everything `collectDistributionJars` gathers into `engine/launcher/bundled-mods`
   (gitignored), root `buildLauncher` (nested `GradleBuild`, the launcher is also an `includeBuild` only so the IDE shows its tasks) then
   packages it; jpackage puts the folder next to the launcher jar. `Installer.syncBundledMods` mirrors it into `<gameDir>/mods` on every play
@@ -1172,3 +1172,46 @@ substitution; the root `build` task depends on its `assemble`.
 `mod_authors`, `mod_description`, and version/range values live in `gradle.properties`, not in
 `src/main/templates/META-INF/neoforge.mods.toml` directly — the template only has `${...}`
 placeholders expanded by the `generateModMetadata` task.
+
+## Architecture: GTA-style life sim (marker `life-sim`)
+
+Branch `feature/life-sim-military`. Package `io.github.jwyoon1220.dncity.life`; the rules are plain JVM in `life/core`
+(`LifeCoreTest`, `./gradlew test`), the Minecraft side is `LifeData` (Codec attachment `dncity:life`, `copyOnDeath`),
+`LifeServerEvents`, `LifeCommand`. **All numbers are DESIGN** (nothing sourced).
+- **Money** (`Economy`/`Account`): cash + bank, start $500. Payroll goes straight to the bank. Death loses 25 % of *cash* (a
+  player killer picks it up, the bank is safe), hospital bill $150 after respawn (cash first, then bank, never debt). `/life
+  deposit|withdraw|pay|status`.
+- **Wanted** (`Wanted`/`Crime`): heat score -> 0..5 stars, cools 2/s after 20 s without a crime and without police seeing the
+  player. Crimes come from hooks: hitting a player/villager (assault, 5 s cooldown), killing villagers/iron golems/players.
+  Police = iron golems (hunt the player from 2 stars) + online players with a `law` job (killing a wanted player as law pays
+  $500/star instead of a crime). Dying wipes the wanted level; `/life surrender` pays $1000/star bail.
+- **Jobs** (`Jobs`): courier, mechanic, medic, police, soldier; ranks with wage per 5-minute shift and shifts-to-promotion.
+  The soldier ladder (8 ranks, low pay, slow) is the "hard military" side: killing/assaulting civilians = court-martial
+  (discharge + fine $500 x rank). `/life job list|join|quit`. Admin: `/life admin give|clearwanted`.
+- Not done: ATM/shop blocks, properties, HUD (only action-bar messages), TACZ gunfire as a crime, military missions/factions,
+  tying rank to weapon access. Compiled and unit tested; **not played in a client**.
+
+### Market + shop UI (marker `life-sim-market`)
+
+`/shop` opens a ModernUI screen (`client/shop/ShopFragment`, opened through `ShopClient`; server answers every trade with a fresh
+`ShopSnapshotPayload`, `ShopTradePayload` is client -> server). Prices belong to the market, not to a price list:
+`life/market/Market` (plain JVM, `MarketTest`) derives `price = P0 * S0 / S` from the world supply S, so buying raises and
+selling lowers the price (orders pay the integral under the curve, 6 % spread: buy+sell always loses). Every market step (1 min of
+game time) each item restocks by a random `0 <= inc <= maxInc`, where `maxInc = productionRate * (2 * initial stock - stock)`
+re-adjusts itself every step (a drained item restocks fast, a full one slowly, nothing grows past 2x the initial stock, i.e. half the
+initial price); `productionRate` (0.5-3 %) is random per item, drawn once per world and saved. Stock only falls when players buy,
+so left alone prices sink towards half the initial price and buying pushes them up. Guard rail: supply never below 5 % of the
+initial stock (price at most 20x). The only authored numbers are each item's initial price and depth in `dncity/market_items.json`, generated by
+`python tools/market/generate_market_items.py` (all ammo rounds, food, First Aid medical items, gear; items of a missing mod are
+skipped at load). Opened from the phone's home page ("상점" -> `PhoneAction.OpenShop` closes the phone and sends `/shop`) or by `/shop`. Item icons: `ItemIconView` (a ModernUI `MinecraftSurfaceView` whose renderer calls vanilla `GuiGraphics.renderItem`, because ModernUI's own `ContainerDrawHelper.drawItem` is disabled in this version). State is `MarketSavedData` in the overworld. UI follows the Korean convention: up = red, down = blue. Not done:
+a shop block/NPC (command only today), player-to-player trading through the market, weapon unlocks (user: not needed).
+Compiled and unit tested, **never opened in a client**.
+
+**Ammo shop** (`/ammoshop`, phone home "탄약 상점", below "상점"): `ItemSpec.shop` ("general" | "ammo") splits the catalog; the ammo
+shop has three filter levels, `category` (미사일 / 로켓·폭탄 / 포탄 / 소화기 탄약) -> `sub` (caliber or gun/vehicle family: 전차포 120mm
+(M1A2), 전차포 125mm (T-90A·ZTZ-99A), 브래들리·IFV 기관포, 대구경 곡사포·함포, 중구경 (AC-130 40mm), 박격포, each small-arms caliber, ...)
+-> `kind` (APFSDS, HEAT, HE-FRAG, AP, HE, GS, CM, WP, AA, FMJ, ...); tabs are shown in catalog order, a blank level is hidden. The
+tank rounds are TACZ ammo told apart by an ammo id, so their market key is `tacz_ammo:dncity:m829` (`MarketItems` builds/matches
+those stacks through TACZ's `AmmoItemBuilder`/`IAmmo`; plain keys are registry ids). SuperbWarfare's shells, missiles, rockets and
+bombs are its own items. There is no SAP round anywhere in the game data, so none is sold. Admin money: `/life admin money
+<set|add|take> <player> <cash|bank> <amount>` (balances never go below 0).

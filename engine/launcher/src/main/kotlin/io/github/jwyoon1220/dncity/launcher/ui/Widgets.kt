@@ -116,6 +116,101 @@ class FlatProgress : JComponent() {
     }
 }
 
+/** A rounded, filled, outlined container (cards). */
+class RoundPanel(layout: java.awt.LayoutManager, private val radius: Int = 16) : javax.swing.JPanel(layout) {
+    init {
+        isOpaque = false
+    }
+
+    override fun paintComponent(g: Graphics) {
+        val g2 = Theme.smooth(g)
+        g2.color = Theme.panel
+        g2.fillRoundRect(0, 0, width - 1, height - 1, radius, radius)
+        g2.color = Theme.panelLine
+        g2.drawRoundRect(0, 0, width - 1, height - 1, radius, radius)
+        g2.dispose()
+    }
+}
+
+/** Round avatar with an initial (or "?"), accent gradient. */
+class Avatar : JComponent() {
+    var letter: String = "?"
+        set(v) {
+            field = v
+            repaint()
+        }
+
+    init {
+        preferredSize = Dimension(44, 44)
+        isOpaque = false
+    }
+
+    override fun paintComponent(g: Graphics) {
+        val g2 = Theme.smooth(g)
+        val d = minOf(width, height) - 1
+        g2.paint = java.awt.GradientPaint(0f, 0f, Theme.accentHover, d.toFloat(), d.toFloat(), Theme.accentDown)
+        g2.fillOval(0, 0, d, d)
+        g2.color = Color.WHITE
+        g2.font = Theme.font(Font.BOLD, 18f)
+        val fm = g2.fontMetrics
+        g2.drawString(letter, (d - fm.stringWidth(letter)) / 2, (d - fm.height) / 2 + fm.ascent)
+        g2.dispose()
+    }
+}
+
+/** Flat slider: thin track, accent fill, round thumb. Integer range [min]..[max]. */
+class FlatSlider(private val min: Int, private val max: Int, initial: Int) : JComponent() {
+    private val listeners = mutableListOf<() -> Unit>()
+    var value: Int = initial.coerceIn(min, max)
+        set(v) {
+            val n = v.coerceIn(min, max)
+            if (n != field) {
+                field = n
+                repaint()
+                listeners.forEach { it() }
+            }
+        }
+
+    init {
+        preferredSize = Dimension(100, 28)
+        isOpaque = false
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        val pick = object : java.awt.event.MouseAdapter() {
+            override fun mousePressed(e: java.awt.event.MouseEvent) = set(e.x)
+            override fun mouseDragged(e: java.awt.event.MouseEvent) = set(e.x)
+            fun set(x: Int) {
+                if (!isEnabled) return
+                val frac = ((x - PAD).toDouble() / (width - 2 * PAD)).coerceIn(0.0, 1.0)
+                value = min + Math.round(frac * (max - min)).toInt()
+            }
+        }
+        addMouseListener(pick)
+        addMouseMotionListener(pick)
+    }
+
+    fun onChange(l: () -> Unit) {
+        listeners += l
+    }
+
+    override fun paintComponent(g: Graphics) {
+        val g2 = Theme.smooth(g)
+        val cy = height / 2
+        val track = width - 2 * PAD
+        val x = PAD + (track * (value - min).toDouble() / (max - min)).toInt()
+        g2.color = Theme.field
+        g2.fillRoundRect(PAD, cy - 3, track, 6, 6, 6)
+        g2.color = if (isEnabled) Theme.accent else Theme.disabled
+        g2.fillRoundRect(PAD, cy - 3, x - PAD, 6, 6, 6)
+        g2.color = if (isEnabled) Color.WHITE else Theme.muted
+        g2.fillOval(x - 8, cy - 8, 16, 16)
+        g2.dispose()
+    }
+
+    private companion object {
+        const val PAD = 9
+    }
+}
+
 fun label(text: String, muted: Boolean = false, size: Float = 13f, style: Int = Font.PLAIN) = JLabel(text).apply {
     foreground = if (muted) Theme.muted else Theme.text
     font = Theme.font(style, size)

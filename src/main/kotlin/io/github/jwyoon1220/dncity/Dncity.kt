@@ -27,6 +27,12 @@ import io.github.jwyoon1220.dncity.farentity.FarEntityServer
 import io.github.jwyoon1220.dncity.command.PhoneNumberCommand
 import io.github.jwyoon1220.dncity.command.RadioCommand
 import io.github.jwyoon1220.dncity.item.ModItems
+import io.github.jwyoon1220.dncity.life.LifeAttachments
+import io.github.jwyoon1220.dncity.life.LifeCommand
+import io.github.jwyoon1220.dncity.life.LifeServerEvents
+import io.github.jwyoon1220.dncity.life.market.MarketService
+import io.github.jwyoon1220.dncity.command.ShopCommand
+import io.github.jwyoon1220.dncity.network.ShopNetworking
 import io.github.jwyoon1220.dncity.item.component.ModDataComponents
 import io.github.jwyoon1220.dncity.command.MusicCommand
 import io.github.jwyoon1220.dncity.music.MusicAssetSender
@@ -90,6 +96,18 @@ object Dncity {
         ModItems.REGISTRY.register(MOD_BUS)
         ModDataComponents.REGISTRY.register(MOD_BUS)
         ModAttachments.REGISTRY.register(MOD_BUS)
+        LifeAttachments.REGISTRY.register(MOD_BUS)
+        NeoForge.EVENT_BUS.addListener(LifeCommand::onRegisterCommands)
+        NeoForge.EVENT_BUS.addListener(LifeServerEvents::onServerTick)
+        NeoForge.EVENT_BUS.addListener(LifeServerEvents::onDeath)
+        NeoForge.EVENT_BUS.addListener(LifeServerEvents::onDamage)
+        NeoForge.EVENT_BUS.addListener(LifeServerEvents::onRespawn)
+        NeoForge.EVENT_BUS.addListener(LifeServerEvents::onLoggedOut)
+        NeoForge.EVENT_BUS.addListener(ShopCommand::onRegisterCommands)
+        NeoForge.EVENT_BUS.addListener(MarketService::onServerStarted)
+        NeoForge.EVENT_BUS.addListener(MarketService::onServerStopped)
+        NeoForge.EVENT_BUS.addListener(MarketService::onServerTick)
+        MOD_BUS.addListener(ShopNetworking::onRegisterPayloadHandlers)
 
         NeoForge.EVENT_BUS.addListener(RadioCommand::onRegisterCommands)
         NeoForge.EVENT_BUS.addListener(MusicCommand::onRegisterCommands)
