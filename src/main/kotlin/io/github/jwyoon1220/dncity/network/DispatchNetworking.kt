@@ -12,7 +12,10 @@ object DispatchNetworking {
             context.enqueueWork { DispatchClientState.onCall(payload) }
         })
         registrar.playToClient(DispatchRolePayload.TYPE, DispatchRolePayload.STREAM_CODEC, IPayloadHandler { payload, context ->
-            context.enqueueWork { DispatchClientState.police = payload.police }
+            context.enqueueWork {
+                DispatchClientState.police = payload.police
+                DispatchClientState.frequencyKhz = payload.frequencyKhz
+            }
         })
     }
 }

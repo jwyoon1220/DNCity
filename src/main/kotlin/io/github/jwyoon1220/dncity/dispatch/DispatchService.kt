@@ -59,7 +59,7 @@ object DispatchService {
 
     private val nextId = AtomicInteger(1)
     private val lastCall = ConcurrentHashMap<String, Long>()
-    private val roleSent = HashMap<UUID, Boolean>()
+    private val roleSent = HashMap<UUID, Pair<Boolean, Double>>()
 
     private val worker = ThreadPoolExecutor(
         1, 1, 0L, TimeUnit.MILLISECONDS, LinkedBlockingQueue(MAX_QUEUE),
@@ -82,10 +82,10 @@ object DispatchService {
         val online = HashSet<UUID>()
         for (p in server.playerList.players) {
             online += p.uuid
-            val police = isPolice(p)
-            if (roleSent[p.uuid] != police) {
-                roleSent[p.uuid] = police
-                PacketDistributor.sendToPlayer(p, DispatchRolePayload(police))
+            val role = isPolice(p) to frequencyKhz
+            if (roleSent[p.uuid] != role) {
+                roleSent[p.uuid] = role
+                PacketDistributor.sendToPlayer(p, DispatchRolePayload(role.first, role.second))
             }
         }
         roleSent.keys.retainAll(online)

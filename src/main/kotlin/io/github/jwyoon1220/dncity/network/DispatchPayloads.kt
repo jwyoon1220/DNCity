@@ -57,8 +57,11 @@ data class DispatchCallPayload(
     }
 }
 
-/** Server -> client: whether this player has a law job (the phone shows the dispatch app only then). Sent on change. */
-data class DispatchRolePayload(val police: Boolean) : CustomPacketPayload {
+/**
+ * Server -> client: whether this player has a law job (the phone shows the dispatch app, the radio screen a police-channel
+ * button, only then) and the police channel's frequency. Sent on change.
+ */
+data class DispatchRolePayload(val police: Boolean, val frequencyKhz: Double) : CustomPacketPayload {
     override fun type() = TYPE
 
     companion object {
@@ -67,6 +70,7 @@ data class DispatchRolePayload(val police: Boolean) : CustomPacketPayload {
 
         val STREAM_CODEC: StreamCodec<ByteBuf, DispatchRolePayload> = StreamCodec.composite(
             ByteBufCodecs.BOOL, DispatchRolePayload::police,
+            ByteBufCodecs.DOUBLE, DispatchRolePayload::frequencyKhz,
             ::DispatchRolePayload,
         )
     }

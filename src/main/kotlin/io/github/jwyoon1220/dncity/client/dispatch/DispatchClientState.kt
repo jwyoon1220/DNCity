@@ -8,6 +8,8 @@ object DispatchClientState {
     const val MAX_HISTORY = 30
 
     @Volatile var police: Boolean = false
+    /** The police channel (kHz), as the server last told us. */
+    @Volatile var frequencyKhz: Double = 155_475.0
     @Volatile var latest: DispatchCallPayload? = null
     @Volatile var latestAtMs: Long = 0
     /** Newest first. */
