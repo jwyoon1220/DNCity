@@ -129,10 +129,11 @@ class RadioScreen(private val radio: RadioItem, stack: ItemStack, @Suppress("unu
         sendTune(row)
     }
 
-    /** Tunes [row] to the police channel in a mode the radio can use there (voice FM first, then AM). */
+    /** Tunes [row] to the police channel in a mode the radio can use there (sideband on HF, else narrow FM, then AM). */
     private fun tunePolice(row: SlotRow) {
         val modes = radio.bandGroup.modes
-        val mode = listOf(RadioMode.NBFM, RadioMode.AM).firstOrNull { it in modes } ?: modes.first()
+        val sideband = if (DispatchClientState.frequencyKhz < 10_000.0) RadioMode.LSB else RadioMode.USB
+        val mode = listOf(sideband, RadioMode.USB, RadioMode.LSB, RadioMode.NBFM, RadioMode.AM).firstOrNull { it in modes } ?: modes.first()
         row.mode = mode
         row.modeButton.message = Component.literal(mode.name)
         row.freqBox.value = trimFrequency(DispatchClientState.frequencyKhz)

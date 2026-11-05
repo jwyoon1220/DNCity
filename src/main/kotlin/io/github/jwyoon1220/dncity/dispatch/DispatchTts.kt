@@ -19,6 +19,9 @@ object DispatchTts {
     private val LOGGER = LoggerFactory.getLogger("dncity/dispatch-tts")
     private const val TARGET_RATE = 8000
     private const val TIMEOUT_SECONDS = 25L
+
+    /** SAPI speaking rate, -10..10 (0 = normal, 4 is about 1.5x): dispatchers talk fast. Part of the cache key. */
+    private const val SPEECH_RATE = 4
     private var warned = false
 
     private val dir: File by lazy { FMLPaths.CONFIGDIR.get().resolve("dncity").resolve("dispatch").toFile().also { it.mkdirs() } }
@@ -35,7 +38,7 @@ object DispatchTts {
     }
 
     private fun hash(text: String): String =
-        MessageDigest.getInstance("SHA-1").digest(text.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+        MessageDigest.getInstance("SHA-1").digest(("rate$SPEECH_RATE:" + text).toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
 
     private fun run(text: String, out: File): Boolean {
         val os = System.getProperty("os.name").lowercase()
@@ -45,13 +48,13 @@ object DispatchTts {
                 "Add-Type -AssemblyName System.Speech; \$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; " +
                     "try { \$s.SelectVoiceByHints([System.Speech.Synthesis.VoiceGender]::NotSet, [System.Speech.Synthesis.VoiceAge]::NotSet, 0, " +
                     "[System.Globalization.CultureInfo]::GetCultureInfo('ko-KR')) } catch { }; " +
-                    "\$s.SetOutputToWaveFile(\$env:DNCITY_TTS_OUT); \$s.Speak(\$env:DNCITY_TTS_TEXT); \$s.Dispose()",
+                    "\$s.Rate = $SPEECH_RATE; \$s.SetOutputToWaveFile(\$env:DNCITY_TTS_OUT); \$s.Speak(\$env:DNCITY_TTS_TEXT); \$s.Dispose()",
             ).also {
                 it.environment()["DNCITY_TTS_OUT"] = out.absolutePath
                 it.environment()["DNCITY_TTS_TEXT"] = text
             }
-            os.contains("mac") -> ProcessBuilder("say", "-o", out.absolutePath, "--file-format=WAVE", "--data-format=LEI16@22050", text)
-            else -> ProcessBuilder("espeak-ng", "-v", "ko", "-s", "165", "-w", out.absolutePath, text)
+            os.contains("mac") -> ProcessBuilder("say", "-r", "${150 + SPEECH_RATE * 20}", "-o", out.absolutePath, "--file-format=WAVE", "--data-format=LEI16@22050", text)
+            else -> ProcessBuilder("espeak-ng", "-v", "ko", "-s", "${165 + SPEECH_RATE * 15}", "-w", out.absolutePath, text)
         }
         return try {
             pb.redirectErrorStream(true)

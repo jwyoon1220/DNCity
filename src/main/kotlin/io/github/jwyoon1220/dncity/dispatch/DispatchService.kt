@@ -41,12 +41,17 @@ import kotlin.random.Random
 object DispatchService {
     private val LOGGER = LoggerFactory.getLogger("dncity/dispatch")
 
-    /** Police band, VHF (155.475 MHz, a US public-safety mutual-aid channel). Change with `/dispatch freq`. */
-    const val DEFAULT_FREQUENCY_KHZ = 155_475.0
+    /**
+     * Shortwave, 7.000 MHz: HF has no range limit here (ground wave + map-spanning night skywave) and, with codec2's
+     * HF tier (MODE_1200, 1.2 kb/s), is the most vocoder-garbled of the bands. Change with `/dispatch freq`.
+     */
+    const val DEFAULT_FREQUENCY_KHZ = 7_000.0
 
     /** Transmitter id the clients mix the dispatch stream under (a real entity id can never be this large). */
     private const val DISPATCH_SENDER_ID = Int.MAX_VALUE - 7
-    private const val MODE_NAME = "USB"
+
+    /** Sideband by HF convention (LSB below 10 MHz, USB above); both are codec2 modes with identical DSP. */
+    private fun modeNameFor(freqKhz: Double) = if (freqKhz < 10_000.0) "LSB" else "USB"
     private const val GLOBAL_RANGE_BLOCKS = 1.0e9
     private const val PER_CRIME_COOLDOWN_MS = 45_000L
     private const val MAX_QUEUE = 4
@@ -137,6 +142,7 @@ object DispatchService {
                 val n = enc.samplesPerFrame
                 val frameNanos = n * 1_000_000_000L / Codec2Codec.SAMPLE_RATE
                 val prepared = prepare(pcm)
+                val modeName = modeNameFor(freq)
                 val rng = Random(text.hashCode())
                 var deadline = System.nanoTime()
                 val range = RadioRangeInfo.of(GLOBAL_RANGE_BLOCKS, obstructed = false, stormNoise = false)
@@ -149,7 +155,7 @@ object DispatchService {
                     val bytes = enc.encode(frame)
                     if (rng.nextDouble() >= FRAME_LOSS) {
                         for (uuid in listeners) {
-                            VoiceKcpServer.sendRadioRelay(uuid, DISPATCH_SENDER_ID, bytes, freq, MODE_NAME, origin, range)
+                            VoiceKcpServer.sendRadioRelay(uuid, DISPATCH_SENDER_ID, bytes, freq, modeName, origin, range)
                         }
                     }
                     deadline += frameNanos
