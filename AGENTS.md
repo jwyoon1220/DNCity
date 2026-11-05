@@ -1276,3 +1276,7 @@ tank rounds are TACZ ammo told apart by an ammo id, so their market key is `tacz
 those stacks through TACZ's `AmmoItemBuilder`/`IAmmo`; plain keys are registry ids). SuperbWarfare's shells, missiles, rockets and
 bombs are its own items. There is no SAP round anywhere in the game data, so none is sold. Admin money: `/life admin money
 <set|add|take> <player> <cash|bank> <amount>` (balances never go below 0).
+
+## Fonts (2026-11-05)
+
+`assets/modernui/font/NotoSansKR-Regular.ttf` / `-Bold.ttf` are static wght 400/700 instances cut from Google's variable Noto Sans KR (`assets/dncity/fonts/NotoSansKR-VF.ttf`, default instance is Thin, which is why the earlier file named "Regular" looked hairline). ModernUI registers only `modernui:font/*` resource fonts, so they live in that namespace; the phone's NanoVG surface reads the same file. `ConfigImpl` puts "Noto Sans KR" first in ModernUI's default `fallbackFontFamilyList` (an existing `config/ModernUI/client.toml` keeps its old list and needs the entry added; Korean otherwise falls to a system font, Gulim on Korean Windows). D2Coding (`.ttc`) is bundled but nothing loads it yet. Licenses: `OFL-NotoSansKR.txt`, `OFL-D2Coding.txt`.

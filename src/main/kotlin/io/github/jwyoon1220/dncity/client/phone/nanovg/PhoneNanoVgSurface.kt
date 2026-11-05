@@ -134,7 +134,7 @@ object PhoneNanoVgSurface {
         check(ctx != 0L) { "PhoneNanoVgSurface: nvgCreate failed" }
 
         val fontBytes = javaClass.classLoader
-            .getResourceAsStream("assets/dncity/fonts/NotoSansKR-Regular.ttf")
+            .getResourceAsStream("assets/modernui/font/NotoSansKR-Regular.ttf")
             ?.use { it.readBytes() }
             ?: error("PhoneNanoVgSurface: NotoSansKR-Regular.ttf resource not found on classpath")
         val buffer = BufferUtils.createByteBuffer(fontBytes.size)

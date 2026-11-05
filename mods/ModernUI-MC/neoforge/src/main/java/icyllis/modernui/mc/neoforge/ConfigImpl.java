@@ -558,6 +558,7 @@ public final class ConfigImpl {
                             "This is only read once when the game is loaded, you can reload via in-game GUI.")
                     .defineList("fallbackFontFamilyList", () -> {
                         List<String> list = new ArrayList<>();
+                        list.add("Noto Sans KR"); // DNCity: bundled at assets/modernui/font, Korean glyphs
                         list.add("Source Han Sans CN Medium");
                         list.add("Noto Sans");
                         list.add("Segoe UI Variable");
